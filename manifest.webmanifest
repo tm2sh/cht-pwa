@@ -1,0 +1,16 @@
+{
+  "name": "Семья — PWA-макет",
+  "short_name": "Семья",
+  "description": "Демонстрационный макет семейного чата для проверки на телефоне.",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#e9eff7",
+  "theme_color": "#e9eff7",
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
