@@ -38,6 +38,7 @@ html, body {
    under-reported dynamic viewport. Only the controls shrink for the keyboard. */
 body { position: relative; font-size: 15px; line-height: 1.4; }
 body::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; height: calc(var(--composer-bottom) + var(--control-size)); pointer-events: none; background: linear-gradient(to top, light-dark(#12253a33, #00000057), light-dark(#12253a1a, #0000002e) 40%, light-dark(#12253a08, #0000000f) 75%, transparent); }
+:root[data-keyboard="open"] body::after { content: none; }
 button, input { font: inherit; }
 button { appearance: none; -webkit-appearance: none; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 button:disabled { cursor: default; }
@@ -85,10 +86,8 @@ button:focus, button:focus-visible { outline: none; }
 }
 .tg-app:has(>.tg-search:not([hidden])) { --tg-top-inset: calc(var(--header-bottom) + 128px); }
 .tg-app:has(>.tg-compose-panel:not([hidden])) { --tg-bottom-inset: calc(var(--composer-bottom) + var(--control-size) + 92px); }
-.tg-app::before, .tg-app::after { content: ""; position: absolute; left: 0; right: 0; z-index: 2; pointer-events: none; }
+.tg-app::before { content: ""; position: absolute; left: 0; right: 0; z-index: 2; pointer-events: none; }
 .tg-app::before { top: 0; height: var(--header-bottom); background: linear-gradient(to bottom, light-dark(#12253a33, #00000057), light-dark(#12253a1a, #0000002e) 40%, light-dark(#12253a08, #0000000f) 75%, transparent); }
-.tg-app::after { content: none; }
-:root[data-keyboard="open"] .tg-app::after { content: ""; bottom: 0; height: calc(var(--composer-bottom) + var(--control-size)); background: linear-gradient(to top, light-dark(#12253a33, #00000057), light-dark(#12253a1a, #0000002e) 40%, light-dark(#12253a08, #0000000f) 75%, transparent); }
 
 .tg-header { position: absolute; top: var(--header-top); left: var(--gutter-left); right: var(--gutter-right); z-index: 4; display: flex; align-items: center; gap: 10px; pointer-events: none; }
 .tg-header>* { pointer-events: auto; }
