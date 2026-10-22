@@ -1,10 +1,10 @@
 /* Increase this version when changing the files cached at installation. */
 const CACHE_PREFIX = 'cht-pwa-layout:' + self.registration.scope + ':';
-const CACHE_NAME = CACHE_PREFIX + 'v2';
+const CACHE_NAME = CACHE_PREFIX + 'v3';
 const APP_FILES = [
   './',
   './index.html',
-  './styles.css',
+  './styles.css?v=3',
   './app.js',
   './manifest.webmanifest',
   './vendor/lucide.min.js',
