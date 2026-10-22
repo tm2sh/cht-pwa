@@ -36,6 +36,9 @@
     viewportFrame = 0;
     // Keep native pinch zoom; changing the layout while zoomed would fight it.
     if(viewport && Math.abs(viewport.scale - 1) > .01) return;
+    // Only the message history should scroll. A normal-flow root avoids iOS
+    // clipping, but text focus can still pan the document during keyboard entry.
+    if(documentRoot.dataset.displayMode === 'standalone' && (window.scrollX || window.scrollY)) window.scrollTo(0, 0);
     const width = viewport?.width || window.innerWidth;
     const height = viewport?.height || window.innerHeight;
     if(Math.abs(width - stableViewportWidth) > 40) {
@@ -46,8 +49,8 @@
     if(!editing) stableViewportHeight = Math.max(stableViewportHeight, window.innerHeight);
     const keyboardOpen = editing && Math.max(stableViewportHeight, window.innerHeight) - height > 120;
     documentRoot.dataset.keyboard = keyboardOpen ? 'open' : 'closed';
-    // Let CSS fill the entire screen normally: standalone iOS can under-report
-    // VisualViewport.height even with no keyboard. Only shrink for text entry.
+    // Standalone CSS uses the large viewport, browser CSS the dynamic viewport.
+    // VisualViewport is only used to shrink the chat during text entry.
     if(keyboardOpen) {
       documentRoot.style.setProperty('--keyboard-height', height + 'px');
       documentRoot.style.setProperty('--keyboard-top', Math.max(0, viewport?.offsetTop || 0) + 'px');
@@ -61,6 +64,7 @@
     if(!viewportFrame) viewportFrame = requestAnimationFrame(updateViewport);
   }
   window.addEventListener('resize', scheduleViewport, {passive:true});
+  window.addEventListener('scroll', scheduleViewport, {passive:true});
   window.addEventListener('pageshow', scheduleViewport);
   viewport?.addEventListener('resize', scheduleViewport, {passive:true});
   viewport?.addEventListener('scroll', scheduleViewport, {passive:true});

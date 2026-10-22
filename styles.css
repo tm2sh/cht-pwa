@@ -4,6 +4,7 @@
   --chat-wallpaper-color: light-dark(#e9eff7, #101c2c);
   --chat-wallpaper-image: radial-gradient(ellipse at 100% 5%, light-dark(#ffe4d2e0, #71463980), transparent 38%), radial-gradient(ellipse at 109% 54%, light-dark(#90c8f5c7, #145d8bcc), transparent 58%), radial-gradient(ellipse at -10% 93%, light-dark(#cab4f8cc, #5b397a99), transparent 53%), radial-gradient(ellipse at 0% 27%, light-dark(#e8f8fc, #244a5e88), transparent 58%);
   --chat-wallpaper-height: 100%;
+  --app-height: 100vh;
   --control-size: 58px;
   color: light-dark(#19273b, #f0f5fc);
   -webkit-text-size-adjust: 100%;
@@ -15,12 +16,15 @@
   --bottom-safe: var(--safe-bottom);
 }
 
+@supports (height: 100dvh) { :root { --app-height: 100dvh; } }
+@media (display-mode: standalone) { :root { --app-height: 100vh; } }
+:root[data-display-mode="standalone"] { --app-height: 100vh; }
 :root[data-keyboard="open"] { --bottom-safe: 0px; }
 * { box-sizing: border-box; }
 html, body {
   margin: 0;
   width: 100%;
-  height: 100%;
+  height: var(--app-height);
   overflow: hidden;
   overscroll-behavior: none;
   background-color: var(--chat-wallpaper-color);
@@ -29,9 +33,9 @@ html, body {
   background-position: center top;
   background-repeat: no-repeat;
 }
-/* The wallpaper and controls share the viewport iOS actually gives the page.
-   Only the controls shrink when the keyboard opens. */
-body { position: fixed; inset: 0; height: 100vh; height: 100dvh; font-size: 15px; line-height: 1.4; }
+/* Keep the page in document flow: a fixed body can clip standalone iOS to its
+   under-reported dynamic viewport. Only the controls shrink for the keyboard. */
+body { position: relative; font-size: 15px; line-height: 1.4; }
 body::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; height: calc(max(12px, var(--bottom-safe)) + var(--control-size)); pointer-events: none; background: linear-gradient(to top, light-dark(#12253a33, #00000057), light-dark(#12253a1a, #0000002e) 40%, light-dark(#12253a08, #0000000f) 75%, transparent); }
 button, input { font: inherit; }
 button { appearance: none; -webkit-appearance: none; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
@@ -41,10 +45,9 @@ button:focus, button:focus-visible { outline: none; }
 [hidden] { display: none !important; }
 
 #family-telegram-ui {
-  position: absolute;
-  inset: 0;
+  position: relative;
   width: 100%;
-  height: 100%;
+  height: var(--app-height);
 }
 :root[data-keyboard="open"] #family-telegram-ui {
   top: var(--keyboard-top, 0px);

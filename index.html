@@ -10,16 +10,18 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Семья">
-  <!-- Keep the system status bar outside the page: translucent mode can
-       displace the standalone viewport and leave a bottom gap on iOS. -->
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Семья — PWA-макет</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
   <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./styles.css?v=4">
+  <script>
+    // iOS can expose navigator.standalone before its display-mode media query.
+    if (navigator.standalone) document.documentElement.dataset.displayMode = 'standalone';
+  </script>
+  <link rel="stylesheet" href="./styles.css?v=5">
   <script src="./vendor/lucide.min.js" defer></script>
-  <script src="./app.js" defer></script>
+  <script src="./app.js?v=5" defer></script>
 </head>
 <body>
 <main id="family-telegram-ui">
