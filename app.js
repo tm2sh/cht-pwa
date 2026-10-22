@@ -28,10 +28,22 @@
   let viewportFrame = 0;
   let stableViewportHeight = window.innerHeight;
   let stableViewportWidth = window.innerWidth;
-  let followBottom = false;
+  let followBottom = true;
+  function scrollToLatest() {
+    followBottom = true;
+    history.scrollTop = history.scrollHeight;
+  }
+  function keepLatestVisible() {
+    if(followBottom) requestAnimationFrame(() => {
+      if(followBottom) scrollToLatest();
+    });
+  }
   history.addEventListener('scroll', () => {
     followBottom = history.scrollHeight - history.scrollTop - history.clientHeight < 24;
   }, {passive:true});
+  // Safe-area padding and viewport size may settle after the first paint.
+  // Keep the last message above the composer unless the user scrolls up.
+  new ResizeObserver(keepLatestVisible).observe(history);
   function updateViewport() {
     viewportFrame = 0;
     // Keep native pinch zoom; changing the layout while zoomed would fight it.
@@ -58,14 +70,17 @@
       documentRoot.style.removeProperty('--keyboard-height');
       documentRoot.style.removeProperty('--keyboard-top');
     }
-    if(followBottom) requestAnimationFrame(() => { history.scrollTop = history.scrollHeight; });
+    keepLatestVisible();
   }
   function scheduleViewport() {
     if(!viewportFrame) viewportFrame = requestAnimationFrame(updateViewport);
   }
   window.addEventListener('resize', scheduleViewport, {passive:true});
   window.addEventListener('scroll', scheduleViewport, {passive:true});
-  window.addEventListener('pageshow', scheduleViewport);
+  window.addEventListener('pageshow', () => {
+    scheduleViewport();
+    requestAnimationFrame(scrollToLatest);
+  });
   viewport?.addEventListener('resize', scheduleViewport, {passive:true});
   viewport?.addEventListener('scroll', scheduleViewport, {passive:true});
   document.addEventListener('focusin', scheduleViewport);
@@ -130,7 +145,7 @@
     if(kind==='voice') {
       const voice=document.createElement('div'); voice.className='tg-copy'; voice.dataset.searchable=''; voice.textContent='🎙 Голосовое сообщение · '+time(Math.max(1,recordSeconds)); content.append(voice);
     }
-    if(!searchPanel.hidden) renderSearch(); icons(); requestAnimationFrame(()=>{history.scrollTop=history.scrollHeight;});
+    if(!searchPanel.hidden) renderSearch(); icons(); requestAnimationFrame(scrollToLatest);
   }
   function stopRecording() { clearInterval(recordTimer); recordTimer=null; recording=false; root.querySelector('.tg-recording').hidden=true; voiceButton.classList.remove('is-recording'); voiceButton.setAttribute('aria-expanded','false'); voiceButton.setAttribute('aria-label','Записать голосовое сообщение'); updateComposer(); }
   function startRecording() {
@@ -183,7 +198,7 @@
   renderDesign();
   window.addEventListener('pagehide',()=>{clearInterval(recordTimer);clearInterval(voiceTimer);clearTimeout(toastTimer);},{once:true});
   icons();
-  requestAnimationFrame(()=>{const group=history.querySelector('.tg-message-group[data-author="mom"]');const top=parseFloat(getComputedStyle(history).paddingTop);history.scrollTop+=group.getBoundingClientRect().top-history.getBoundingClientRect().top-top-12;});
+  requestAnimationFrame(scrollToLatest);
   if('serviceWorker' in navigator && window.isSecureContext) {
     navigator.serviceWorker.register('./sw.js', {scope:'./', updateViaCache:'none'})
       .then(() => navigator.serviceWorker.ready)
