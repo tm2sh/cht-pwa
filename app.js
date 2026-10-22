@@ -18,6 +18,13 @@
   const state = {radius:16,avatarSize:40,blur:42};
   const viewport = window.visualViewport;
   const documentRoot = document.documentElement;
+  documentRoot.dataset.inputModality = 'pointer';
+  document.addEventListener('pointerdown', () => {
+    documentRoot.dataset.inputModality = 'pointer';
+  }, {capture:true, passive:true});
+  document.addEventListener('keydown', event => {
+    if(event.key === 'Tab' || event.key === 'Escape') documentRoot.dataset.inputModality = 'keyboard';
+  }, {capture:true});
   let viewportFrame = 0;
   let stableViewportHeight = window.innerHeight;
   let stableViewportWidth = window.innerWidth;
@@ -39,9 +46,15 @@
     if(!editing) stableViewportHeight = Math.max(stableViewportHeight, window.innerHeight);
     const keyboardOpen = editing && Math.max(stableViewportHeight, window.innerHeight) - height > 120;
     documentRoot.dataset.keyboard = keyboardOpen ? 'open' : 'closed';
-    documentRoot.style.setProperty('--viewport-height', height + 'px');
-    // Some WebKit versions leave a stale offset after the keyboard closes.
-    documentRoot.style.setProperty('--viewport-top', (keyboardOpen ? Math.max(0, viewport?.offsetTop || 0) : 0) + 'px');
+    // Let CSS fill the entire screen normally: standalone iOS can under-report
+    // VisualViewport.height even with no keyboard. Only shrink for text entry.
+    if(keyboardOpen) {
+      documentRoot.style.setProperty('--keyboard-height', height + 'px');
+      documentRoot.style.setProperty('--keyboard-top', Math.max(0, viewport?.offsetTop || 0) + 'px');
+    } else {
+      documentRoot.style.removeProperty('--keyboard-height');
+      documentRoot.style.removeProperty('--keyboard-top');
+    }
     if(followBottom) requestAnimationFrame(() => { history.scrollTop = history.scrollHeight; });
   }
   function scheduleViewport() {

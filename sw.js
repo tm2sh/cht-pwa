@@ -1,6 +1,6 @@
 /* Increase this version when changing the files cached at installation. */
 const CACHE_PREFIX = 'cht-pwa-layout:' + self.registration.scope + ':';
-const CACHE_NAME = CACHE_PREFIX + 'v1';
+const CACHE_NAME = CACHE_PREFIX + 'v2';
 const APP_FILES = [
   './',
   './index.html',
