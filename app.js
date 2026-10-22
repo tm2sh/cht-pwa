@@ -84,6 +84,7 @@
   window.addEventListener('scroll', scheduleViewport, {passive:true});
   window.addEventListener('pageshow', () => {
     scheduleViewport();
+    setChatPicker(true, false);
     requestAnimationFrame(scrollToLatest);
   });
   viewport?.addEventListener('resize', scheduleViewport, {passive:true});
@@ -112,8 +113,13 @@
   function toggleMenu(open) { if(open)document.activeElement?.blur(); menu.hidden=!open; attachButton.setAttribute('aria-expanded',String(open)); }
   function closeComposer() { if(recording)stopRecording(); composePanel.hidden=true; voiceButton.setAttribute('aria-expanded','false'); }
   function setChatPicker(open,focus=true) {
+    if(open && !dialog.hidden) closeMedia();
+    if(open && !searchPanel.hidden) toggleSearch(false);
     if(open) { document.activeElement?.blur(); toggleMenu(false); closeComposer(); if(voiceTimer)stopVoice(); clearTimeout(toastTimer); root.querySelector('.tg-toast').hidden=true; }
     chatPicker.hidden=!open;
+    const title = open ? 'Чаты' : chats[activeChat].name;
+    document.title = title+' — PWA-макет';
+    app.setAttribute('aria-label', title+' · Liquid Glass');
     [...app.children].forEach(child=>child.inert=open&&child!==chatPicker);
     if(focus) (open?chatPicker.querySelector('[data-chat="'+activeChat+'"]'):backButton).focus({preventScroll:true});
   }
@@ -140,8 +146,6 @@
       avatar.classList.toggle('tg-friends-avatar', chatId === 'friends');
       history.setAttribute('aria-label', 'Сообщения чата «'+next.name+'», прокручиваемая лента');
       input.setAttribute('aria-label', 'Сообщение в чат «'+next.name+'»');
-      app.setAttribute('aria-label', next.name+' · Liquid Glass');
-      document.title = next.name+' — PWA-макет';
       history.querySelectorAll('.tg-wave').forEach(wave);
       updateComposer();
       icons();
@@ -239,6 +243,7 @@
   renderDesign();
   window.addEventListener('pagehide',()=>{clearInterval(recordTimer);clearInterval(voiceTimer);clearTimeout(toastTimer);},{once:true});
   icons();
+  setChatPicker(true, false);
   requestAnimationFrame(scrollToLatest);
   if('serviceWorker' in navigator && window.isSecureContext) {
     navigator.serviceWorker.register('./sw.js', {scope:'./', updateViaCache:'none'})

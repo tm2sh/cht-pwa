@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Семья">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Семья — PWA-макет</title>
+  <title>Чаты — PWA-макет</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
   <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
@@ -21,13 +21,13 @@
   </script>
   <link rel="stylesheet" href="./styles.css?v=9">
   <script src="./vendor/lucide.min.js" defer></script>
-  <script src="./app.js?v=9" defer></script>
+  <script src="./app.js?v=10" defer></script>
 </head>
 <body>
 <main id="family-telegram-ui">
   <div class="tg-stage">
-    <article class="tg-app" aria-label="Семейный чат · Liquid Glass">
-      <header class="tg-header">
+    <article class="tg-app" aria-label="Чаты · Liquid Glass">
+      <header class="tg-header" inert>
         <button type="button" class="tg-icon" data-action="chats-back" aria-label="Назад к выбору чата" aria-controls="tg-chat-picker"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
         <div class="tg-family-pill"><div class="tg-group-avatar" aria-hidden="true">С</div>
         <div class="tg-heading"><div class="tg-heading-name">Семья</div><div class="tg-heading-sub" title="6 участников, 2 в сети">6 участников, 2 в сети</div></div></div>
@@ -37,7 +37,7 @@
         <div class="tg-search-field"><i data-lucide="search" aria-hidden="true"></i><input type="search" class="tg-search-input" aria-label="Текст для поиска" placeholder="Поиск по сообщениям" autocomplete="off"><button type="button" class="tg-icon" data-action="search-close" aria-label="Закрыть поиск"><i data-lucide="x" aria-hidden="true"></i></button></div>
         <div class="tg-search-footer"><div class="tg-search-count" role="status" aria-live="polite">Введите слово или фразу</div><div class="tg-search-nav"><button type="button" class="tg-icon" data-action="search-prev" aria-label="Предыдущее совпадение" disabled><i data-lucide="chevron-up" aria-hidden="true"></i></button><button type="button" class="tg-icon" data-action="search-next" aria-label="Следующее совпадение" disabled><i data-lucide="chevron-down" aria-hidden="true"></i></button></div></div>
       </section>
-      <div class="tg-history" role="log" aria-label="Сообщения семьи, прокручиваемая лента" aria-live="polite" aria-relevant="additions">
+      <div class="tg-history" role="log" aria-label="Сообщения семьи, прокручиваемая лента" aria-live="polite" aria-relevant="additions" inert>
         <div class="tg-date"><span>21 октября</span></div>
         <div class="tg-message-row"><span class="tg-avatar" aria-label="Аватарка мамы">М</span><article class="tg-message">
           <div class="tg-author"><span class="tg-author-name">Мама</span></div>
@@ -110,12 +110,12 @@
         <div class="tg-recording" hidden><span class="tg-record-dot"></span><div class="tg-record-copy"><strong class="tg-record-time">0:00</strong><span>Демо голосового</span></div></div>
         <button type="button" class="tg-icon tg-panel-send" data-action="main" aria-label="Отправить сообщение" disabled><i data-lucide="arrow-up" aria-hidden="true"></i></button>
       </div>
-      <div class="tg-composer" role="group" aria-label="Действия чата">
+      <div class="tg-composer" role="group" aria-label="Действия чата" inert>
         <div class="tg-action-item"><button type="button" class="tg-icon tg-action" data-action="attach" aria-label="Файлы: прикрепить фото или видео" aria-expanded="false" aria-controls="tg-attach-menu"><i data-lucide="paperclip" aria-hidden="true"></i></button></div>
         <div class="tg-message-field"><input class="tg-composer-input" aria-label="Сообщение семье" type="text" maxlength="300" autocomplete="off" placeholder="Сообщение"><button type="button" class="tg-icon tg-inline-send" data-action="inline-send" aria-label="Отправить сообщение" hidden><i data-lucide="arrow-up" aria-hidden="true"></i></button></div>
         <div class="tg-action-item"><button type="button" class="tg-icon tg-action" data-action="voice-toggle" aria-label="Записать голосовое сообщение" aria-expanded="false" aria-controls="tg-compose-panel"><i data-lucide="mic" aria-hidden="true"></i></button></div>
       </div>
-      <section class="tg-chat-picker" id="tg-chat-picker" aria-label="Выбор чата" hidden>
+      <section class="tg-chat-picker" id="tg-chat-picker" aria-label="Выбор чата">
         <h2 class="tg-picker-title">Чаты</h2>
         <button type="button" class="tg-chat-choice" data-action="chat-open" data-chat="family" aria-label="Открыть чат Семья">
           <span class="tg-group-avatar" aria-hidden="true">С</span>
