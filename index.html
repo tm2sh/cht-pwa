@@ -19,9 +19,9 @@
     // iOS can expose navigator.standalone before its display-mode media query.
     if (navigator.standalone) document.documentElement.dataset.displayMode = 'standalone';
   </script>
-  <link rel="stylesheet" href="./styles.css?v=8">
+  <link rel="stylesheet" href="./styles.css?v=9">
   <script src="./vendor/lucide.min.js" defer></script>
-  <script src="./app.js?v=7" defer></script>
+  <script src="./app.js?v=9" defer></script>
 </head>
 <body>
 <main id="family-telegram-ui">
@@ -117,9 +117,14 @@
       </div>
       <section class="tg-chat-picker" id="tg-chat-picker" aria-label="Выбор чата" hidden>
         <h2 class="tg-picker-title">Чаты</h2>
-        <button type="button" class="tg-chat-choice" data-action="chat-open" aria-label="Открыть чат Семья">
+        <button type="button" class="tg-chat-choice" data-action="chat-open" data-chat="family" aria-label="Открыть чат Семья">
           <span class="tg-group-avatar" aria-hidden="true">С</span>
           <span class="tg-choice-copy"><span class="tg-choice-top"><span class="tg-choice-name">Семья</span><span class="tg-choice-time">09:48</span></span><span class="tg-choice-preview">Бабушка: Всех жду! 🥰</span></span>
+          <i data-lucide="chevron-right" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="tg-chat-choice" data-action="chat-open" data-chat="friends" aria-label="Открыть чат Друзья">
+          <span class="tg-group-avatar tg-friends-avatar" aria-hidden="true">Д</span>
+          <span class="tg-choice-copy"><span class="tg-choice-top"><span class="tg-choice-name">Друзья</span><span class="tg-choice-time">11:18</span></span><span class="tg-choice-preview">Аня: Договорились! До субботы 🙌</span></span>
           <i data-lucide="chevron-right" aria-hidden="true"></i>
         </button>
       </section>
@@ -129,6 +134,47 @@
     </article>
   </div>
 </main>
+<template id="tg-friends-history">
+  <div class="tg-date"><span>Сегодня</span></div>
+  <div class="tg-message-row tg-friend-max"><span class="tg-avatar" aria-label="Аватарка Макса">М</span><article class="tg-message">
+    <div class="tg-author"><span class="tg-author-name">Макс</span></div>
+    <div class="tg-copy" data-searchable>Есть планы на субботу? Предлагаю выбраться к озеру 🌿</div>
+    <div class="tg-time">11:02</div>
+  </article></div>
+  <div class="tg-message-row tg-message-group" role="group" aria-label="Аня, два сообщения подряд">
+    <span class="tg-avatar" aria-label="Аватарка Ани">А</span>
+    <div class="tg-message-stack">
+      <article class="tg-message"><div class="tg-author"><span class="tg-author-name">Аня</span></div><div class="tg-copy" data-searchable>Я за! Давно хотела туда съездить.</div><div class="tg-time">11:04</div></article>
+      <article class="tg-message" aria-label="Аня, следующее сообщение"><div class="tg-copy" data-searchable>Возьму термос и что-нибудь к чаю ☕️</div><div class="tg-time">11:05</div></article>
+    </div>
+  </div>
+  <div class="tg-message-row tg-own"><article class="tg-message tg-own" aria-label="Ваше сообщение">
+    <div class="tg-copy" data-searchable>Отличная идея! Могу забрать вас по дороге 🚗</div>
+    <div class="tg-time">11:07<i data-lucide="check-check" aria-label="Прочитано"></i></div>
+  </article></div>
+  <div class="tg-message-row tg-friend-lena"><span class="tg-avatar" aria-label="Аватарка Лены">Л</span><article class="tg-message tg-media-message">
+    <div class="tg-author"><span class="tg-author-name">Лена</span></div>
+    <div class="tg-attachments">
+      <button type="button" class="tg-attachment" data-action="photo" aria-label="Открыть фотографию озера"><div class="tg-scene"><div class="tg-hill"></div><div class="tg-hill tg-hill-second"></div><div class="tg-shore"></div><div class="tg-tree"></div></div></button>
+      <button type="button" class="tg-attachment" data-action="video" aria-label="Открыть видео у озера"><div class="tg-scene tg-scene-alt"><div class="tg-hill"></div><div class="tg-hill tg-hill-second"></div><div class="tg-shore"></div><div class="tg-tree"></div></div><span class="tg-video-label"><i data-lucide="play" aria-hidden="true"></i>0:18</span></button>
+    </div>
+    <div class="tg-copy" data-searchable>Вот то место, о котором рассказывала. Там есть дорожка вдоль воды 📷</div><div class="tg-time">11:10</div>
+  </article></div>
+  <div class="tg-message-row tg-friend-max"><span class="tg-avatar" aria-label="Аватарка Макса">М</span><article class="tg-message">
+    <div class="tg-author"><span class="tg-author-name">Макс</span></div>
+    <div class="tg-voice"><button type="button" class="tg-icon tg-play" data-action="voice-play" aria-label="Прослушать пример голосового сообщения" aria-pressed="false"><i data-lucide="play" aria-hidden="true"></i></button><div class="tg-wave-wrap"><div class="tg-wave" aria-hidden="true"></div><div class="tg-duration">0:12</div></div></div>
+    <div class="tg-time">11:12</div>
+  </article></div>
+  <div class="tg-message-row tg-own"><article class="tg-message tg-own" aria-label="Ваше сообщение">
+    <div class="tg-copy" data-searchable>Тогда встречаемся в 10:00 у кофейни. Плед и настолку возьму с собой 🎲</div>
+    <div class="tg-time">11:15<i data-lucide="check-check" aria-label="Прочитано"></i></div>
+  </article></div>
+  <div class="tg-message-row"><span class="tg-avatar" aria-label="Аватарка Ани">А</span><article class="tg-message">
+    <div class="tg-author"><span class="tg-author-name">Аня</span></div>
+    <div class="tg-copy" data-searchable>Договорились! До субботы 🙌</div><div class="tg-time">11:18</div>
+  </article></div>
+  <div class="tg-new-message" hidden></div>
+</template>
 <noscript>Для просмотра интерактивного макета включите JavaScript.</noscript>
 </body>
 </html>

@@ -37,8 +37,8 @@ html, body {
 /* Keep the page in document flow: a fixed body can clip standalone iOS to its
    under-reported dynamic viewport. Only the controls shrink for the keyboard. */
 body { position: relative; font-size: 15px; line-height: 1.4; }
-body::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; height: calc(var(--composer-bottom) + var(--control-size)); pointer-events: none; background: linear-gradient(to top, light-dark(#12253a33, #00000057), light-dark(#12253a1a, #0000002e) 40%, light-dark(#12253a08, #0000000f) 75%, transparent); }
-:root[data-keyboard="open"] body::after { content: none; }
+body::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; height: calc(var(--composer-bottom) + var(--control-size)); pointer-events: none; background: linear-gradient(to top, light-dark(#12253a33, #00000057), light-dark(#12253a1a, #0000002e) 40%, light-dark(#12253a08, #0000000f) 75%, transparent); opacity: 1; transition: opacity .15s ease .4s; }
+:root[data-keyboard="open"] body::after, body:has(input:focus, textarea:focus, [contenteditable="true"]:focus)::after { opacity: 0; transition: none; }
 button, input { font: inherit; }
 button { appearance: none; -webkit-appearance: none; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 button:disabled { cursor: default; }
@@ -105,6 +105,7 @@ button:focus, button:focus-visible { outline: none; }
 .tg-header>.tg-icon { width: var(--control-size); }
 .tg-family-pill { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; padding: 8px 12px; border-radius: calc(var(--control-size) / 2); }
 .tg-group-avatar { display: grid; place-items: center; width: 39px; height: 39px; flex: none; border-radius: 50%; color: #ffffff; background: linear-gradient(150deg, #8ec8ff, #3a9cf8 65%, #4280ef); border: 1px solid #ffffff63; box-shadow: inset 0 2px 3px #ffffff78, 0 3px 7px #3b83c323; font-size: 18px; font-weight: 600; }
+.tg-group-avatar.tg-friends-avatar { background: linear-gradient(150deg, #8ce4d2, #2ebbaa 65%, #229996); }
 .tg-heading { min-width: 0; flex: 1; }
 .tg-heading-name { font-size: 18px; font-weight: 650; letter-spacing: -.4px; }
 .tg-heading-sub { color: var(--tg-muted); font-size: 11px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -126,10 +127,10 @@ button:focus, button:focus-visible { outline: none; }
 .tg-author { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; }
 .tg-author-name { font-size: 13px; font-weight: 600; color: light-dark(#b56a31, #efb56f); }
 .tg-avatar { display: grid; place-items: center; width: var(--tg-avatar); height: var(--tg-avatar); flex: none; border-radius: 50%; border: 1px solid #ffffff6b; box-shadow: inset 0 2px 3px #ffffff66, 0 2px 4px #23324812; color: #ffffff; background: linear-gradient(145deg, #edb464, #dc864b); font-size: 14px; font-weight: 650; }
-.tg-dad .tg-avatar { background: linear-gradient(145deg, #7ca8e6, #547db8); }
-.tg-dad .tg-author-name { color: light-dark(#4779bb, #8eb4ee); }
-.tg-gran .tg-avatar { background: linear-gradient(145deg, #af9bda, #8b79bc); }
-.tg-gran .tg-author-name { color: light-dark(#8770ad, #c5a9ee); }
+.tg-dad .tg-avatar, .tg-friend-max .tg-avatar { background: linear-gradient(145deg, #7ca8e6, #547db8); }
+.tg-dad .tg-author-name, .tg-friend-max .tg-author-name { color: light-dark(#4779bb, #8eb4ee); }
+.tg-gran .tg-avatar, .tg-friend-lena .tg-avatar { background: linear-gradient(145deg, #af9bda, #8b79bc); }
+.tg-gran .tg-author-name, .tg-friend-lena .tg-author-name { color: light-dark(#8770ad, #c5a9ee); }
 .tg-copy { font-size: 15px; line-height: 1.46; overflow-wrap: anywhere; }
 .tg-time { display: flex; justify-content: flex-end; align-items: center; gap: 4px; color: var(--tg-muted); font-size: 11px; margin-top: 5px; }
 .tg-time svg { width: 14px; height: 14px; color: light-dark(#437dbb, #b2d5f7); }
@@ -215,6 +216,7 @@ mark { color: inherit; background: var(--tg-hit); border-radius: 3px; padding: 0
 .tg-chat-picker { position: absolute; inset: 0; z-index: 6; padding: calc(var(--safe-top) + 20px) var(--gutter-right) calc(var(--bottom-safe) + 24px) var(--gutter-left); background-color: var(--chat-wallpaper-color); background-image: var(--chat-wallpaper-image); background-size: 100% var(--chat-wallpaper-height); overflow-y: auto; }
 .tg-picker-title { margin: 0 11px 22px; font-size: 28px; line-height: 1.2; font-weight: 650; letter-spacing: -.6px; }
 .tg-chat-choice { display: flex; align-items: center; gap: 12px; width: 100%; min-width: 0; padding: 15px 13px; border: 1px solid var(--tg-glass-edge); border-radius: 24px; background: var(--tg-glass); box-shadow: var(--tg-glass-shadow); color: var(--tg-ink); text-align: left; -webkit-backdrop-filter: blur(var(--tg-blur)); backdrop-filter: blur(var(--tg-blur)); }
+.tg-chat-choice + .tg-chat-choice { margin-top: 12px; }
 .tg-choice-copy { min-width: 0; flex: 1; }
 .tg-choice-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .tg-choice-name { font-size: 17px; font-weight: 600; }

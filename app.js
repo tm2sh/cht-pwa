@@ -15,6 +15,11 @@
   const dialog = root.querySelector('.tg-dialog');
   const chatPicker = root.querySelector('.tg-chat-picker');
   const backButton = root.querySelector('[data-action="chats-back"]');
+  const chats = {
+    family: {name:'Семья', avatar:'С', members:'6 участников, 2 в сети', nodes:[...history.childNodes], draft:''},
+    friends: {name:'Друзья', avatar:'Д', members:'4 участника, 2 в сети', nodes:[...document.getElementById('tg-friends-history').content.cloneNode(true).childNodes], draft:''},
+  };
+  let activeChat = 'family';
   const state = {radius:16,avatarSize:40,blur:42};
   const viewport = window.visualViewport;
   const documentRoot = document.documentElement;
@@ -110,7 +115,39 @@
     if(open) { document.activeElement?.blur(); toggleMenu(false); closeComposer(); if(voiceTimer)stopVoice(); clearTimeout(toastTimer); root.querySelector('.tg-toast').hidden=true; }
     chatPicker.hidden=!open;
     [...app.children].forEach(child=>child.inert=open&&child!==chatPicker);
-    if(focus) (open?chatPicker.querySelector('[data-action="chat-open"]'):backButton).focus();
+    if(focus) (open?chatPicker.querySelector('[data-chat="'+activeChat+'"]'):backButton).focus({preventScroll:true});
+  }
+  function openChat(chatId) {
+    const next = chats[chatId];
+    if(!next) return;
+    document.activeElement?.blur();
+    toggleMenu(false);
+    closeComposer();
+    if(voiceTimer) stopVoice();
+    if(!searchPanel.hidden) toggleSearch(false);
+    if(chatId !== activeChat) {
+      chats[activeChat].nodes = [...history.childNodes];
+      chats[activeChat].draft = input.value;
+      activeChat = chatId;
+      history.replaceChildren(...next.nodes);
+      input.value = next.draft;
+      root.querySelector('.tg-heading-name').textContent = next.name;
+      const subtitle = root.querySelector('.tg-heading-sub');
+      subtitle.textContent = next.members;
+      subtitle.title = next.members;
+      const avatar = root.querySelector('.tg-family-pill .tg-group-avatar');
+      avatar.textContent = next.avatar;
+      avatar.classList.toggle('tg-friends-avatar', chatId === 'friends');
+      history.setAttribute('aria-label', 'Сообщения чата «'+next.name+'», прокручиваемая лента');
+      input.setAttribute('aria-label', 'Сообщение в чат «'+next.name+'»');
+      app.setAttribute('aria-label', next.name+' · Liquid Glass');
+      document.title = next.name+' — PWA-макет';
+      history.querySelectorAll('.tg-wave').forEach(wave);
+      updateComposer();
+      icons();
+    }
+    setChatPicker(false);
+    requestAnimationFrame(scrollToLatest);
   }
   function renderSearch() {
     const query=searchInput.value.trim().toLocaleLowerCase('ru'); matches=[];
@@ -145,6 +182,9 @@
     if(kind==='voice') {
       const voice=document.createElement('div'); voice.className='tg-copy'; voice.dataset.searchable=''; voice.textContent='🎙 Голосовое сообщение · '+time(Math.max(1,recordSeconds)); content.append(voice);
     }
+    const choice = chatPicker.querySelector('[data-chat="'+activeChat+'"]');
+    choice.querySelector('.tg-choice-preview').textContent = 'Вы: '+(kind==='text'?text:kind==='photo'?'Фотография':kind==='video'?'Видео':'Голосовое сообщение');
+    choice.querySelector('.tg-choice-time').textContent = 'Сейчас';
     if(!searchPanel.hidden) renderSearch(); icons(); requestAnimationFrame(scrollToLatest);
   }
   function stopRecording() { clearInterval(recordTimer); recordTimer=null; recording=false; root.querySelector('.tg-recording').hidden=true; voiceButton.classList.remove('is-recording'); voiceButton.setAttribute('aria-expanded','false'); voiceButton.setAttribute('aria-label','Записать голосовое сообщение'); updateComposer(); }
@@ -162,6 +202,7 @@
     mediaTrigger=button; const scene=root.querySelector(kind==='photo'?'[data-action="photo"] .tg-scene':'[data-action="video"] .tg-scene').cloneNode(true);
     root.querySelector('.tg-dialog-media').replaceChildren(scene);
     root.querySelector('.tg-dialog-title').textContent=kind==='photo'?'Фотография':'Видео · 0:18';
+    root.querySelector('.tg-dialog-caption').textContent=activeChat==='friends'?'Прогулка с друзьями 🌿':'Наши выходные 🍂';
     root.querySelector('.tg-dialog-note').textContent=kind==='photo'?'Иллюстрация для примера интерфейса':'Пример экрана просмотра · без видеозаписи';
     [...app.children].forEach(child=>{ if(child!==dialog) child.inert=true; }); dialog.hidden=false; dialog.querySelector('button').focus();
   }
@@ -170,7 +211,7 @@
     const button=event.target.closest('button[data-action]'); if(!button) return;
     const action=button.dataset.action;
     if(action==='chats-back'){setChatPicker(true);}
-    if(action==='chat-open'){setChatPicker(false);}
+    if(action==='chat-open'){openChat(button.dataset.chat);}
     if(action==='search-open'){toggleSearch(searchPanel.hidden);}
     if(action==='search-close'){toggleSearch(false);}
     if(action==='search-next'||action==='search-prev'){if(matches.length){activeMatch=(activeMatch+(action==='search-next'?1:-1)+matches.length)%matches.length;updateMatch();}}
