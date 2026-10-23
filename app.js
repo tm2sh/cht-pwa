@@ -1,23 +1,35 @@
 (() => {
-  const root = document.getElementById('family-telegram-ui');
-  const app = root.querySelector('.tg-app');
-  const history = root.querySelector('.tg-history');
-  const input = root.querySelector('.tg-composer-input');
+  const root = document.getElementById('chat-ui');
+  const app = root.querySelector('.chat-app');
+  const history = root.querySelector('.chat-history');
+  const input = root.querySelector('.chat-composer-input');
   const mainButton = root.querySelector('[data-action="main"]');
   const attachButton = root.querySelector('[data-action="attach"]');
   const inlineSend = root.querySelector('[data-action="inline-send"]');
   const voiceButton = root.querySelector('[data-action="voice-toggle"]');
-  const composePanel = root.querySelector('.tg-compose-panel');
-  const searchPanel = root.querySelector('.tg-search');
-  const searchInput = root.querySelector('.tg-search-input');
-  const count = root.querySelector('.tg-search-count');
-  const menu = root.querySelector('.tg-menu');
-  const dialog = root.querySelector('.tg-dialog');
-  const chatPicker = root.querySelector('.tg-chat-picker');
+  const composePanel = root.querySelector('.chat-compose-panel');
+  const searchPanel = root.querySelector('.chat-search');
+  const searchInput = root.querySelector('.chat-search-input');
+  const count = root.querySelector('.chat-search-count');
+  const menu = root.querySelector('.chat-menu');
+  const dialog = root.querySelector('.chat-dialog');
+  const chatPicker = root.querySelector('.chat-chat-picker');
   const backButton = root.querySelector('[data-action="chats-back"]');
+  const settings = root.querySelector('.chat-settings');
+  const profileButton = root.querySelector('[data-action="settings-open"]');
+  const profileForm = root.querySelector('.chat-settings-form');
+  const profileName = root.querySelector('#chat-profile-name');
+  const profileLogin = root.querySelector('#chat-profile-login');
+  const profilePassword = root.querySelector('#chat-profile-password');
+  const profilePasswordRepeat = root.querySelector('#chat-profile-password-repeat');
+  const avatarFile = root.querySelector('#chat-avatar-file');
+  const accountScreen = root.querySelector('.chat-account-screen');
+  // Profile edits are local to this demo page; passwords are never retained.
+  const profile = {name:'Тимур', login:'timur', avatar:''};
+  let draftAvatar = '', avatarRequest = 0;
   const chats = {
     family: {name:'Семья', avatar:'С', members:'6 участников, 2 в сети', nodes:[...history.childNodes], draft:''},
-    friends: {name:'Друзья', avatar:'Д', members:'4 участника, 2 в сети', nodes:[...document.getElementById('tg-friends-history').content.cloneNode(true).childNodes], draft:''},
+    friends: {name:'Друзья', avatar:'Д', members:'4 участника, 2 в сети', nodes:[...document.getElementById('chat-friends-history').content.cloneNode(true).childNodes], draft:''},
   };
   let activeChat = 'family';
   const state = {radius:16,avatarSize:40,blur:42};
@@ -105,17 +117,21 @@
   const waveHeights = [5,10,18,12,21,14,7,17,11,22,15,8,19,13,6,16,22,12,7,17,10,20,13,8];
   function icons() { if (globalThis.lucide) lucide.createIcons({attrs:{width:20,height:20}}); }
   function wave(parent) { parent.replaceChildren(...waveHeights.map(height => { const bar = document.createElement('span'); bar.style.height=height+'px'; return bar; })); }
-  root.querySelectorAll('.tg-wave').forEach(wave);
-  function toast(text) { const box=root.querySelector('.tg-toast'); box.textContent=text; box.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(()=>box.hidden=true,2800); }
+  root.querySelectorAll('.chat-wave').forEach(wave);
+  function toast(text) { const box=root.querySelector('.chat-toast'); box.textContent=text; box.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(()=>box.hidden=true,2800); }
   function time(seconds) { return Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0'); }
   function buttonIcon(button,name,label) { button.innerHTML='<i data-lucide="'+name+'" aria-hidden="true"></i>'; button.setAttribute('aria-label',label); icons(); }
   function updateComposer() { mainButton.disabled=!recording; mainButton.setAttribute('aria-label','Отправить демо-голосовое'); inlineSend.hidden=recording||!input.value.trim(); input.disabled=recording; }
   function toggleMenu(open) { if(open)document.activeElement?.blur(); menu.hidden=!open; attachButton.setAttribute('aria-expanded',String(open)); }
   function closeComposer() { if(recording)stopRecording(); composePanel.hidden=true; voiceButton.setAttribute('aria-expanded','false'); }
   function setChatPicker(open,focus=true) {
+    if(open) {
+      if(!settings.hidden) closeSettings(false);
+      accountScreen.hidden=true;
+    }
     if(open && !dialog.hidden) closeMedia();
     if(open && !searchPanel.hidden) toggleSearch(false);
-    if(open) { document.activeElement?.blur(); toggleMenu(false); closeComposer(); if(voiceTimer)stopVoice(); clearTimeout(toastTimer); root.querySelector('.tg-toast').hidden=true; }
+    if(open) { document.activeElement?.blur(); toggleMenu(false); closeComposer(); if(voiceTimer)stopVoice(); clearTimeout(toastTimer); root.querySelector('.chat-toast').hidden=true; }
     chatPicker.hidden=!open;
     const title = open ? 'Чаты' : chats[activeChat].name;
     document.title = title+' — PWA-макет';
@@ -123,6 +139,118 @@
     [...app.children].forEach(child=>child.inert=open&&child!==chatPicker);
     if(focus) (open?chatPicker.querySelector('[data-chat="'+activeChat+'"]'):backButton).focus({preventScroll:true});
   }
+  function setScreen(screen, title) {
+    [...app.children].forEach(child => {
+      child.inert = child !== screen && !child.classList.contains('chat-toast');
+    });
+    document.title = title+' — PWA-макет';
+    app.setAttribute('aria-label', title+' · Liquid Glass');
+  }
+  function renderAvatar(host, avatar, name) {
+    host.replaceChildren();
+    if(avatar) {
+      const image = document.createElement('img');
+      image.src = avatar;
+      image.alt = '';
+      host.append(image);
+    } else {
+      host.textContent = Array.from(name.trim())[0]?.toLocaleUpperCase('ru') || 'Я';
+    }
+  }
+  function updateProfileDraft() {
+    const name = profileName.value.trim() || profile.name;
+    renderAvatar(root.querySelector('[data-settings-avatar]'), draftAvatar, name);
+    root.querySelector('.chat-profile-name').textContent = name;
+    root.querySelector('.chat-profile-login').textContent = '@'+(profileLogin.value.trim() || profile.login);
+    root.querySelector('[data-action="avatar-remove"]').hidden = !draftAvatar;
+    root.querySelector('.chat-settings-save').disabled = !(
+      profileName.value.trim() !== profile.name || profileLogin.value.trim() !== profile.login ||
+      draftAvatar !== profile.avatar || profilePassword.value || profilePasswordRepeat.value
+    );
+  }
+  function clearPasswordFields() {
+    [profilePassword, profilePasswordRepeat].forEach(field => {
+      field.value = '';
+      field.required = false;
+      field.setCustomValidity('');
+    });
+  }
+  function openSettings() {
+    document.activeElement?.blur();
+    profileName.value = profile.name;
+    profileLogin.value = profile.login;
+    profileName.setCustomValidity('');
+    profileLogin.setCustomValidity('');
+    clearPasswordFields();
+    draftAvatar = profile.avatar;
+    updateProfileDraft();
+    settings.hidden = false;
+    settings.scrollTop = 0;
+    setScreen(settings, 'Настройки');
+    root.querySelector('[data-action="settings-close"]').focus({preventScroll:true});
+  }
+  function closeSettings(focus=true) {
+    document.activeElement?.blur();
+    avatarRequest++;
+    if(draftAvatar && draftAvatar !== profile.avatar) URL.revokeObjectURL(draftAvatar);
+    draftAvatar = profile.avatar;
+    avatarFile.value = '';
+    clearPasswordFields();
+    clearTimeout(toastTimer);
+    root.querySelector('.chat-toast').hidden = true;
+    settings.hidden = true;
+    setScreen(chatPicker, 'Чаты');
+    if(focus) profileButton.focus({preventScroll:true});
+  }
+  function removeAvatar() {
+    avatarRequest++;
+    if(draftAvatar && draftAvatar !== profile.avatar) URL.revokeObjectURL(draftAvatar);
+    draftAvatar = '';
+    updateProfileDraft();
+  }
+  avatarFile.addEventListener('change', () => {
+    const file = avatarFile.files[0];
+    avatarFile.value = '';
+    if(!file) return;
+    const request = ++avatarRequest;
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      if(request !== avatarRequest || settings.hidden) { URL.revokeObjectURL(url); return; }
+      if(draftAvatar && draftAvatar !== profile.avatar) URL.revokeObjectURL(draftAvatar);
+      draftAvatar = url;
+      updateProfileDraft();
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      if(request === avatarRequest && !settings.hidden) toast('Не удалось открыть фото. Попробуйте другое изображение.');
+    };
+    image.src = url;
+  });
+  profileForm.addEventListener('input', () => {
+    profileName.setCustomValidity('');
+    profileLogin.setCustomValidity('');
+    profilePassword.required = Boolean(profilePasswordRepeat.value);
+    profilePasswordRepeat.required = Boolean(profilePassword.value);
+    profilePasswordRepeat.setCustomValidity(profilePasswordRepeat.value && profilePassword.value !== profilePasswordRepeat.value ? 'Пароли не совпадают.' : '');
+    updateProfileDraft();
+  });
+  profileForm.addEventListener('submit', event => {
+    event.preventDefault();
+    profileName.setCustomValidity(profileName.value.trim() ? '' : 'Укажите имя.');
+    profileLogin.setCustomValidity(profileLogin.value.trim() ? '' : 'Укажите логин.');
+    if(!profileForm.reportValidity()) return;
+    const passwordChanged = Boolean(profilePassword.value);
+    const oldAvatar = profile.avatar;
+    profile.name = profileName.value.trim();
+    profile.login = profileLogin.value.trim();
+    profile.avatar = draftAvatar;
+    if(oldAvatar && oldAvatar !== profile.avatar) URL.revokeObjectURL(oldAvatar);
+    root.querySelectorAll('[data-user-avatar]').forEach(host => renderAvatar(host, profile.avatar, profile.name));
+    clearPasswordFields();
+    updateProfileDraft();
+    toast(passwordChanged ? 'Профиль обновлён · смена пароля показана без сохранения' : 'Профиль обновлён в макете');
+  });
   function openChat(chatId) {
     const next = chats[chatId];
     if(!next) return;
@@ -137,16 +265,16 @@
       activeChat = chatId;
       history.replaceChildren(...next.nodes);
       input.value = next.draft;
-      root.querySelector('.tg-heading-name').textContent = next.name;
-      const subtitle = root.querySelector('.tg-heading-sub');
+      root.querySelector('.chat-heading-name').textContent = next.name;
+      const subtitle = root.querySelector('.chat-heading-sub');
       subtitle.textContent = next.members;
       subtitle.title = next.members;
-      const avatar = root.querySelector('.tg-family-pill .tg-group-avatar');
+      const avatar = root.querySelector('.chat-family-pill .chat-group-avatar');
       avatar.textContent = next.avatar;
-      avatar.classList.toggle('tg-friends-avatar', chatId === 'friends');
+      avatar.classList.toggle('chat-friends-avatar', chatId === 'friends');
       history.setAttribute('aria-label', 'Сообщения чата «'+next.name+'», прокручиваемая лента');
       input.setAttribute('aria-label', 'Сообщение в чат «'+next.name+'»');
-      history.querySelectorAll('.tg-wave').forEach(wave);
+      history.querySelectorAll('.chat-wave').forEach(wave);
       updateComposer();
       icons();
     }
@@ -158,62 +286,73 @@
     root.querySelectorAll('[data-searchable]').forEach(element=> {
       const source=element.dataset.original||element.textContent;
       element.dataset.original=source; element.textContent=source;
-      element.closest('.tg-message').classList.remove('tg-search-current');
+      element.closest('.chat-message').classList.remove('chat-search-current');
       if(!query) return;
       const lower=source.toLocaleLowerCase('ru'); let start=0, index=lower.indexOf(query);
       if(index<0) return;
       element.replaceChildren();
       while(index>=0) { element.append(document.createTextNode(source.slice(start,index))); const mark=document.createElement('mark'); mark.textContent=source.slice(index,index+query.length); element.append(mark); start=index+query.length; index=lower.indexOf(query,start); }
-      element.append(document.createTextNode(source.slice(start))); matches.push(element.closest('.tg-message'));
+      element.append(document.createTextNode(source.slice(start))); matches.push(element.closest('.chat-message'));
     });
     activeMatch=0; updateMatch();
     root.querySelectorAll('[data-action="search-prev"],[data-action="search-next"]').forEach(button=>button.disabled=matches.length===0);
     if(!query) count.textContent='Введите слово или фразу';
   }
-  function updateMatch() { matches.forEach((message,index)=>message.classList.toggle('tg-search-current',index===activeMatch)); count.textContent=matches.length?String(activeMatch+1)+' из '+matches.length+' сообщений':'Ничего не найдено'; if(matches.length){const box=matches[activeMatch].getBoundingClientRect();const frame=history.getBoundingClientRect();const style=getComputedStyle(history);const top=parseFloat(style.paddingTop);const bottom=parseFloat(style.paddingBottom);history.scrollTop+=box.top-frame.top-top-(history.clientHeight-top-bottom-box.height)/2;} }
+  function updateMatch() { matches.forEach((message,index)=>message.classList.toggle('chat-search-current',index===activeMatch)); count.textContent=matches.length?String(activeMatch+1)+' из '+matches.length+' сообщений':'Ничего не найдено'; if(matches.length){const box=matches[activeMatch].getBoundingClientRect();const frame=history.getBoundingClientRect();const style=getComputedStyle(history);const top=parseFloat(style.paddingTop);const bottom=parseFloat(style.paddingBottom);history.scrollTop+=box.top-frame.top-top-(history.clientHeight-top-bottom-box.height)/2;} }
   function toggleSearch(open) { searchPanel.hidden=!open; root.querySelector('[data-action="search-open"]').setAttribute('aria-expanded',String(open)); if(open) searchInput.focus({preventScroll:true}); else { searchInput.blur(); searchInput.value=''; renderSearch(); root.querySelector('[data-action="search-open"]').focus({preventScroll:true}); } }
   function addMessage(kind,text='') {
-    const host=root.querySelector('.tg-new-message'); host.hidden=false;
-    const row=document.createElement('div'); row.className='tg-message-row tg-own';
-    row.innerHTML='<article class="tg-message tg-own" aria-label="Ваше сообщение"><div class="tg-message-content"></div><div class="tg-time">Сейчас<i data-lucide="check" aria-label="Отправлено в макете"></i></div></article>';
+    const host=root.querySelector('.chat-new-message'); host.hidden=false;
+    const row=document.createElement('div'); row.className='chat-message-row chat-own';
+    row.innerHTML='<article class="chat-message chat-own" aria-label="Ваше сообщение"><div class="chat-message-content"></div><div class="chat-time">Сейчас<i data-lucide="check" aria-label="Отправлено в макете"></i></div></article>';
     host.append(row); host.style.display='flex'; host.style.flexDirection='column';host.style.gap='4px';
-    const content=row.querySelector('.tg-message-content');
-    if(kind==='text') { const copy=document.createElement('div'); copy.className='tg-copy'; copy.dataset.searchable=''; copy.textContent=text; content.append(copy); }
+    const content=row.querySelector('.chat-message-content');
+    if(kind==='text') { const copy=document.createElement('div'); copy.className='chat-copy'; copy.dataset.searchable=''; copy.textContent=text; content.append(copy); }
     if(kind==='photo'||kind==='video') {
       const sample=root.querySelector(kind==='photo'?'[data-action="photo"]':'[data-action="video"]').cloneNode(true);
       sample.style.width='180px'; content.append(sample);
     }
     if(kind==='voice') {
-      const voice=document.createElement('div'); voice.className='tg-copy'; voice.dataset.searchable=''; voice.textContent='🎙 Голосовое сообщение · '+time(Math.max(1,recordSeconds)); content.append(voice);
+      const voice=document.createElement('div'); voice.className='chat-copy'; voice.dataset.searchable=''; voice.textContent='🎙 Голосовое сообщение · '+time(Math.max(1,recordSeconds)); content.append(voice);
     }
     const choice = chatPicker.querySelector('[data-chat="'+activeChat+'"]');
-    choice.querySelector('.tg-choice-preview').textContent = 'Вы: '+(kind==='text'?text:kind==='photo'?'Фотография':kind==='video'?'Видео':'Голосовое сообщение');
-    choice.querySelector('.tg-choice-time').textContent = 'Сейчас';
+    choice.querySelector('.chat-choice-preview').textContent = 'Вы: '+(kind==='text'?text:kind==='photo'?'Фотография':kind==='video'?'Видео':'Голосовое сообщение');
+    choice.querySelector('.chat-choice-time').textContent = 'Сейчас';
     if(!searchPanel.hidden) renderSearch(); icons(); requestAnimationFrame(scrollToLatest);
   }
-  function stopRecording() { clearInterval(recordTimer); recordTimer=null; recording=false; root.querySelector('.tg-recording').hidden=true; voiceButton.classList.remove('is-recording'); voiceButton.setAttribute('aria-expanded','false'); voiceButton.setAttribute('aria-label','Записать голосовое сообщение'); updateComposer(); }
+  function stopRecording() { clearInterval(recordTimer); recordTimer=null; recording=false; root.querySelector('.chat-recording').hidden=true; voiceButton.classList.remove('is-recording'); voiceButton.setAttribute('aria-expanded','false'); voiceButton.setAttribute('aria-label','Записать голосовое сообщение'); updateComposer(); }
   function startRecording() {
     document.activeElement?.blur();
     toggleMenu(false); recording=true; recordSeconds=0; composePanel.hidden=false;
-    root.querySelector('.tg-recording').hidden=false; root.querySelector('.tg-record-time').textContent='0:00';
+    root.querySelector('.chat-recording').hidden=false; root.querySelector('.chat-record-time').textContent='0:00';
     voiceButton.setAttribute('aria-expanded','true'); voiceButton.setAttribute('aria-label','Отменить демо-запись'); voiceButton.classList.add('is-recording'); updateComposer();
-    recordTimer=setInterval(()=>{ recordSeconds++; root.querySelector('.tg-record-time').textContent=time(recordSeconds); if(recordSeconds>=60){closeComposer();toast('Демо-запись остановлена');}},1000);
+    recordTimer=setInterval(()=>{ recordSeconds++; root.querySelector('.chat-record-time').textContent=time(recordSeconds); if(recordSeconds>=60){closeComposer();toast('Демо-запись остановлена');}},1000);
   }
   function send() { if(recording){addMessage('voice');closeComposer();toast('Демо: голосовое добавлено без записи звука');return;} const text=input.value.trim(); if(!text)return; addMessage('text',text);input.value='';closeComposer();updateComposer();toast('Демо-сообщение · видно только здесь'); }
-  function stopVoice() { clearInterval(voiceTimer); voiceTimer=null; voiceElapsed=0; const button=root.querySelector('[data-action="voice-play"]'); button.setAttribute('aria-pressed','false'); buttonIcon(button,'play','Прослушать пример голосового сообщения'); root.querySelector('.tg-duration').textContent='0:12'; root.querySelectorAll('.tg-wave span').forEach(bar=>bar.dataset.active='false'); }
+  function stopVoice() { clearInterval(voiceTimer); voiceTimer=null; voiceElapsed=0; const button=root.querySelector('[data-action="voice-play"]'); button.setAttribute('aria-pressed','false'); buttonIcon(button,'play','Прослушать пример голосового сообщения'); root.querySelector('.chat-duration').textContent='0:12'; root.querySelectorAll('.chat-wave span').forEach(bar=>bar.dataset.active='false'); }
   function openMedia(kind,button) {
     document.activeElement?.blur();
-    mediaTrigger=button; const scene=root.querySelector(kind==='photo'?'[data-action="photo"] .tg-scene':'[data-action="video"] .tg-scene').cloneNode(true);
-    root.querySelector('.tg-dialog-media').replaceChildren(scene);
-    root.querySelector('.tg-dialog-title').textContent=kind==='photo'?'Фотография':'Видео · 0:18';
-    root.querySelector('.tg-dialog-caption').textContent=activeChat==='friends'?'Прогулка с друзьями 🌿':'Наши выходные 🍂';
-    root.querySelector('.tg-dialog-note').textContent=kind==='photo'?'Иллюстрация для примера интерфейса':'Пример экрана просмотра · без видеозаписи';
+    mediaTrigger=button; const scene=root.querySelector(kind==='photo'?'[data-action="photo"] .chat-scene':'[data-action="video"] .chat-scene').cloneNode(true);
+    root.querySelector('.chat-dialog-media').replaceChildren(scene);
+    root.querySelector('.chat-dialog-title').textContent=kind==='photo'?'Фотография':'Видео · 0:18';
+    root.querySelector('.chat-dialog-caption').textContent=activeChat==='friends'?'Прогулка с друзьями 🌿':'Наши выходные 🍂';
+    root.querySelector('.chat-dialog-note').textContent=kind==='photo'?'Иллюстрация для примера интерфейса':'Пример экрана просмотра · без видеозаписи';
     [...app.children].forEach(child=>{ if(child!==dialog) child.inert=true; }); dialog.hidden=false; dialog.querySelector('button').focus();
   }
   function closeMedia() { dialog.hidden=true; [...app.children].forEach(child=>child.inert=false); mediaTrigger?.focus(); }
   root.addEventListener('click',event=> {
     const button=event.target.closest('button[data-action]'); if(!button) return;
     const action=button.dataset.action;
+    if(action==='settings-open') openSettings();
+    if(action==='settings-close') closeSettings();
+    if(action==='avatar-change') avatarFile.click();
+    if(action==='avatar-remove') removeAvatar();
+    if(action==='account-logout') {
+      closeSettings(false);
+      accountScreen.hidden=false;
+      setScreen(accountScreen, 'Вы вышли из аккаунта');
+      root.querySelector('[data-action="account-return"]').focus({preventScroll:true});
+    }
+    if(action==='account-return') { setChatPicker(true, false); profileButton.focus({preventScroll:true}); }
     if(action==='chats-back'){setChatPicker(true);}
     if(action==='chat-open'){openChat(button.dataset.chat);}
     if(action==='search-open'){toggleSearch(searchPanel.hidden);}
@@ -229,7 +368,7 @@
     if(action==='voice-play') {
       if(voiceTimer){stopVoice();return;}
       button.setAttribute('aria-pressed','true');buttonIcon(button,'pause','Остановить пример голосового');toast('Демонстрация плеера · без звука');
-      voiceTimer=setInterval(()=>{voiceElapsed++;root.querySelector('.tg-duration').textContent=time(voiceElapsed)+' / 0:12';root.querySelectorAll('.tg-wave span').forEach((bar,index)=>bar.dataset.active=String(index<waveHeights.length*voiceElapsed/12));if(voiceElapsed>=12)stopVoice();},1000);
+      voiceTimer=setInterval(()=>{voiceElapsed++;root.querySelector('.chat-duration').textContent=time(voiceElapsed)+' / 0:12';root.querySelectorAll('.chat-wave span').forEach((bar,index)=>bar.dataset.active=String(index<waveHeights.length*voiceElapsed/12));if(voiceElapsed>=12)stopVoice();},1000);
     }
   });
   input.addEventListener('input',updateComposer);
@@ -238,8 +377,8 @@
   input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.isComposing){event.preventDefault();if(input.value.trim())send();}});
   searchInput.addEventListener('input',renderSearch);
   searchInput.addEventListener('keydown',event=>{if(event.key==='Enter'&&matches.length){event.preventDefault();activeMatch=(activeMatch+(event.shiftKey?-1:1)+matches.length)%matches.length;updateMatch();}});
-  root.addEventListener('keydown',event=>{if(event.key==='Escape'){if(!chatPicker.hidden){setChatPicker(false);}else if(!dialog.hidden)closeMedia();else if(!menu.hidden)toggleMenu(false);else if(!composePanel.hidden)closeComposer();else if(!searchPanel.hidden)toggleSearch(false);}if(!dialog.hidden&&event.key==='Tab'){event.preventDefault();dialog.querySelector('button').focus();}});
-  function renderDesign() { app.style.setProperty('--tg-radius',state.radius+'px');app.style.setProperty('--tg-avatar',state.avatarSize+'px');app.style.setProperty('--tg-blur',state.blur+'px'); }
+  root.addEventListener('keydown',event=>{if(event.key==='Escape'){if(!settings.hidden)closeSettings();else if(!accountScreen.hidden){setChatPicker(true,false);profileButton.focus({preventScroll:true});}else if(!chatPicker.hidden){setChatPicker(false);}else if(!dialog.hidden)closeMedia();else if(!menu.hidden)toggleMenu(false);else if(!composePanel.hidden)closeComposer();else if(!searchPanel.hidden)toggleSearch(false);}if(!dialog.hidden&&event.key==='Tab'){event.preventDefault();dialog.querySelector('button').focus();}});
+  function renderDesign() { app.style.setProperty('--chat-radius',state.radius+'px');app.style.setProperty('--chat-avatar',state.avatarSize+'px');app.style.setProperty('--chat-blur',state.blur+'px'); }
   renderDesign();
   window.addEventListener('pagehide',()=>{clearInterval(recordTimer);clearInterval(voiceTimer);clearTimeout(toastTimer);},{once:true});
   icons();

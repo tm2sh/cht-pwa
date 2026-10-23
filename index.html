@@ -19,161 +19,200 @@
     // iOS can expose navigator.standalone before its display-mode media query.
     if (navigator.standalone) document.documentElement.dataset.displayMode = 'standalone';
   </script>
-  <link rel="stylesheet" href="./styles.css?v=9">
+  <link rel="stylesheet" href="./styles.css?v=11">
   <script src="./vendor/lucide.min.js" defer></script>
-  <script src="./app.js?v=10" defer></script>
+  <script src="./app.js?v=12" defer></script>
 </head>
 <body>
-<main id="family-telegram-ui">
-  <div class="tg-stage">
-    <article class="tg-app" aria-label="Чаты · Liquid Glass">
-      <header class="tg-header" inert>
-        <button type="button" class="tg-icon" data-action="chats-back" aria-label="Назад к выбору чата" aria-controls="tg-chat-picker"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
-        <div class="tg-family-pill"><div class="tg-group-avatar" aria-hidden="true">С</div>
-        <div class="tg-heading"><div class="tg-heading-name">Семья</div><div class="tg-heading-sub" title="6 участников, 2 в сети">6 участников, 2 в сети</div></div></div>
-        <button type="button" class="tg-icon" data-action="search-open" aria-label="Поиск по сообщениям" aria-expanded="false" aria-controls="tg-search-panel"><i data-lucide="search" aria-hidden="true"></i></button>
+<main id="chat-ui">
+  <div class="chat-stage">
+    <article class="chat-app" aria-label="Чаты · Liquid Glass">
+      <header class="chat-header" inert>
+        <button type="button" class="chat-icon" data-action="chats-back" aria-label="Назад к выбору чата" aria-controls="chat-chat-picker"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
+        <div class="chat-family-pill"><div class="chat-group-avatar" aria-hidden="true">С</div>
+        <div class="chat-heading"><div class="chat-heading-name">Семья</div><div class="chat-heading-sub" title="6 участников, 2 в сети">6 участников, 2 в сети</div></div></div>
+        <button type="button" class="chat-icon" data-action="search-open" aria-label="Поиск по сообщениям" aria-expanded="false" aria-controls="chat-search-panel"><i data-lucide="search" aria-hidden="true"></i></button>
       </header>
-      <section id="tg-search-panel" class="tg-search" aria-label="Поиск по переписке" hidden>
-        <div class="tg-search-field"><i data-lucide="search" aria-hidden="true"></i><input type="search" class="tg-search-input" aria-label="Текст для поиска" placeholder="Поиск по сообщениям" autocomplete="off"><button type="button" class="tg-icon" data-action="search-close" aria-label="Закрыть поиск"><i data-lucide="x" aria-hidden="true"></i></button></div>
-        <div class="tg-search-footer"><div class="tg-search-count" role="status" aria-live="polite">Введите слово или фразу</div><div class="tg-search-nav"><button type="button" class="tg-icon" data-action="search-prev" aria-label="Предыдущее совпадение" disabled><i data-lucide="chevron-up" aria-hidden="true"></i></button><button type="button" class="tg-icon" data-action="search-next" aria-label="Следующее совпадение" disabled><i data-lucide="chevron-down" aria-hidden="true"></i></button></div></div>
+      <section id="chat-search-panel" class="chat-search" aria-label="Поиск по переписке" hidden>
+        <div class="chat-search-field"><i data-lucide="search" aria-hidden="true"></i><input type="search" class="chat-search-input" aria-label="Текст для поиска" placeholder="Поиск по сообщениям" autocomplete="off"><button type="button" class="chat-icon" data-action="search-close" aria-label="Закрыть поиск"><i data-lucide="x" aria-hidden="true"></i></button></div>
+        <div class="chat-search-footer"><div class="chat-search-count" role="status" aria-live="polite">Введите слово или фразу</div><div class="chat-search-nav"><button type="button" class="chat-icon" data-action="search-prev" aria-label="Предыдущее совпадение" disabled><i data-lucide="chevron-up" aria-hidden="true"></i></button><button type="button" class="chat-icon" data-action="search-next" aria-label="Следующее совпадение" disabled><i data-lucide="chevron-down" aria-hidden="true"></i></button></div></div>
       </section>
-      <div class="tg-history" role="log" aria-label="Сообщения семьи, прокручиваемая лента" aria-live="polite" aria-relevant="additions" inert>
-        <div class="tg-date"><span>21 октября</span></div>
-        <div class="tg-message-row"><span class="tg-avatar" aria-label="Аватарка мамы">М</span><article class="tg-message">
-          <div class="tg-author"><span class="tg-author-name">Мама</span></div>
-          <div class="tg-copy" data-searchable>Всем доброе утро! В воскресенье собираемся у бабушки? ☀️</div>
-          <div class="tg-time">09:32</div>
+      <div class="chat-history" role="log" aria-label="Сообщения семьи, прокручиваемая лента" aria-live="polite" aria-relevant="additions" inert>
+        <div class="chat-date"><span>21 октября</span></div>
+        <div class="chat-message-row"><span class="chat-avatar" aria-label="Аватарка мамы">М</span><article class="chat-message">
+          <div class="chat-author"><span class="chat-author-name">Мама</span></div>
+          <div class="chat-copy" data-searchable>Всем доброе утро! В воскресенье собираемся у бабушки? ☀️</div>
+          <div class="chat-time">09:32</div>
         </article></div>
-        <div class="tg-message-row tg-dad"><span class="tg-avatar" aria-label="Аватарка папы">П</span><article class="tg-message tg-dad tg-media-message">
-          <div class="tg-author"><span class="tg-author-name">Папа</span></div>
-          <div class="tg-attachments">
-            <button type="button" class="tg-attachment" data-action="photo" aria-label="Открыть фотографию с прогулки"><div class="tg-scene"><div class="tg-hill"></div><div class="tg-hill tg-hill-second"></div><div class="tg-shore"></div><div class="tg-tree"></div></div></button>
-            <button type="button" class="tg-attachment" data-action="video" aria-label="Открыть видео с прогулки"><div class="tg-scene tg-scene-alt"><div class="tg-hill"></div><div class="tg-hill tg-hill-second"></div><div class="tg-shore"></div><div class="tg-tree"></div></div><span class="tg-video-label"><i data-lucide="play" aria-hidden="true"></i>0:18</span></button>
+        <div class="chat-message-row chat-dad"><span class="chat-avatar" aria-label="Аватарка папы">П</span><article class="chat-message chat-dad chat-media-message">
+          <div class="chat-author"><span class="chat-author-name">Папа</span></div>
+          <div class="chat-attachments">
+            <button type="button" class="chat-attachment" data-action="photo" aria-label="Открыть фотографию с прогулки"><div class="chat-scene"><div class="chat-hill"></div><div class="chat-hill chat-hill-second"></div><div class="chat-shore"></div><div class="chat-tree"></div></div></button>
+            <button type="button" class="chat-attachment" data-action="video" aria-label="Открыть видео с прогулки"><div class="chat-scene chat-scene-alt"><div class="chat-hill"></div><div class="chat-hill chat-hill-second"></div><div class="chat-shore"></div><div class="chat-tree"></div></div><span class="chat-video-label"><i data-lucide="play" aria-hidden="true"></i>0:18</span></button>
           </div>
-          <div class="tg-copy" data-searchable>Да! А вот фото и видео с наших выходных 🍂</div>
-          <div class="tg-time">09:34</div>
+          <div class="chat-copy" data-searchable>Да! А вот фото и видео с наших выходных 🍂</div>
+          <div class="chat-time">09:34</div>
         </article></div>
-        <div class="tg-message-row tg-own"><article class="tg-message tg-own" aria-label="Ваше сообщение">
-          <div class="tg-copy" data-searchable>Красота! В воскресенье буду к двум</div>
-          <div class="tg-time">09:36<i data-lucide="check-check" aria-label="Прочитано"></i></div>
+        <div class="chat-message-row chat-own"><article class="chat-message chat-own" aria-label="Ваше сообщение">
+          <div class="chat-copy" data-searchable>Красота! В воскресенье буду к двум</div>
+          <div class="chat-time">09:36<i data-lucide="check-check" aria-label="Прочитано"></i></div>
         </article></div>
-        <div class="tg-message-row tg-gran"><span class="tg-avatar" aria-label="Аватарка бабушки">Б</span><article class="tg-message tg-gran">
-          <div class="tg-author"><span class="tg-author-name">Бабушка</span></div>
-          <div class="tg-voice"><button type="button" class="tg-icon tg-play" data-action="voice-play" aria-label="Прослушать пример голосового сообщения" aria-pressed="false"><i data-lucide="play" aria-hidden="true"></i></button><div class="tg-wave-wrap"><div class="tg-wave" aria-hidden="true"></div><div class="tg-duration">0:12</div></div></div>
-          <div class="tg-time">09:38</div>
+        <div class="chat-message-row chat-gran"><span class="chat-avatar" aria-label="Аватарка бабушки">Б</span><article class="chat-message chat-gran">
+          <div class="chat-author"><span class="chat-author-name">Бабушка</span></div>
+          <div class="chat-voice"><button type="button" class="chat-icon chat-play" data-action="voice-play" aria-label="Прослушать пример голосового сообщения" aria-pressed="false"><i data-lucide="play" aria-hidden="true"></i></button><div class="chat-wave-wrap"><div class="chat-wave" aria-hidden="true"></div><div class="chat-duration">0:12</div></div></div>
+          <div class="chat-time">09:38</div>
         </article></div>
-        <div class="tg-message-row tg-message-group" data-author="mom" role="group" aria-label="Мама, три сообщения подряд">
-          <span class="tg-avatar" aria-label="Аватарка мамы">М</span>
-          <div class="tg-message-stack">
-            <article class="tg-message">
-              <div class="tg-author"><span class="tg-author-name">Мама</span></div>
-              <div class="tg-copy" data-searchable>Тогда я испеку яблочный пирог 🍎</div>
-              <div class="tg-time">09:41</div>
+        <div class="chat-message-row chat-message-group" data-author="mom" role="group" aria-label="Мама, три сообщения подряд">
+          <span class="chat-avatar" aria-label="Аватарка мамы">М</span>
+          <div class="chat-message-stack">
+            <article class="chat-message">
+              <div class="chat-author"><span class="chat-author-name">Мама</span></div>
+              <div class="chat-copy" data-searchable>Тогда я испеку яблочный пирог 🍎</div>
+              <div class="chat-time">09:41</div>
             </article>
-            <article class="tg-message" aria-label="Мама, следующее сообщение">
-              <div class="tg-copy" data-searchable>Яблоки как раз с дачи.</div>
-              <div class="tg-time">09:41</div>
+            <article class="chat-message" aria-label="Мама, следующее сообщение">
+              <div class="chat-copy" data-searchable>Яблоки как раз с дачи.</div>
+              <div class="chat-time">09:41</div>
             </article>
-            <article class="tg-message" aria-label="Мама, следующее сообщение">
-              <div class="tg-copy" data-searchable>Кто-нибудь возьмёт мороженое к пирогу?</div>
-              <div class="tg-time">09:42</div>
+            <article class="chat-message" aria-label="Мама, следующее сообщение">
+              <div class="chat-copy" data-searchable>Кто-нибудь возьмёт мороженое к пирогу?</div>
+              <div class="chat-time">09:42</div>
             </article>
           </div>
         </div>
-        <div class="tg-message-row tg-message-group tg-own" role="group" aria-label="Два ваших сообщения подряд">
-          <div class="tg-message-stack">
-            <article class="tg-message tg-own" aria-label="Ваше сообщение">
-              <div class="tg-copy" data-searchable>Я возьму мороженое 🍨</div>
-              <div class="tg-time">09:43<i data-lucide="check-check" aria-label="Прочитано"></i></div>
+        <div class="chat-message-row chat-message-group chat-own" role="group" aria-label="Два ваших сообщения подряд">
+          <div class="chat-message-stack">
+            <article class="chat-message chat-own" aria-label="Ваше сообщение">
+              <div class="chat-copy" data-searchable>Я возьму мороженое 🍨</div>
+              <div class="chat-time">09:43<i data-lucide="check-check" aria-label="Прочитано"></i></div>
             </article>
-            <article class="tg-message tg-own" aria-label="Ваше следующее сообщение">
-              <div class="tg-copy" data-searchable>И буду к 14:00. Очень жду встречи ❤️</div>
-              <div class="tg-time">09:44<i data-lucide="check-check" aria-label="Прочитано"></i></div>
+            <article class="chat-message chat-own" aria-label="Ваше следующее сообщение">
+              <div class="chat-copy" data-searchable>И буду к 14:00. Очень жду встречи ❤️</div>
+              <div class="chat-time">09:44<i data-lucide="check-check" aria-label="Прочитано"></i></div>
             </article>
           </div>
         </div>
-        <div class="tg-message-row tg-dad"><span class="tg-avatar" aria-label="Аватарка папы">П</span><article class="tg-message tg-dad tg-media-message">
-          <div class="tg-author"><span class="tg-author-name">Папа</span></div>
-          <button type="button" class="tg-attachment tg-single-photo" data-action="photo" aria-label="Открыть ещё одну фотографию с прогулки"><div class="tg-scene tg-scene-alt"><div class="tg-hill"></div><div class="tg-hill tg-hill-second"></div><div class="tg-shore"></div><div class="tg-tree"></div></div></button>
-          <div class="tg-copy" data-searchable>Ещё один кадр нашёл. Такой свет был у озера!</div>
-          <div class="tg-time">09:45</div>
+        <div class="chat-message-row chat-dad"><span class="chat-avatar" aria-label="Аватарка папы">П</span><article class="chat-message chat-dad chat-media-message">
+          <div class="chat-author"><span class="chat-author-name">Папа</span></div>
+          <button type="button" class="chat-attachment chat-single-photo" data-action="photo" aria-label="Открыть ещё одну фотографию с прогулки"><div class="chat-scene chat-scene-alt"><div class="chat-hill"></div><div class="chat-hill chat-hill-second"></div><div class="chat-shore"></div><div class="chat-tree"></div></div></button>
+          <div class="chat-copy" data-searchable>Ещё один кадр нашёл. Такой свет был у озера!</div>
+          <div class="chat-time">09:45</div>
         </article></div>
-        <div class="tg-message-row tg-gran"><span class="tg-avatar" aria-label="Аватарка бабушки">Б</span><article class="tg-message tg-gran">
-          <div class="tg-author"><span class="tg-author-name">Бабушка</span></div>
-          <div class="tg-copy" data-searchable>Всех жду! Достану большие чашки и любимую скатерть 🥰</div>
-          <div class="tg-time">09:48</div>
+        <div class="chat-message-row chat-gran"><span class="chat-avatar" aria-label="Аватарка бабушки">Б</span><article class="chat-message chat-gran">
+          <div class="chat-author"><span class="chat-author-name">Бабушка</span></div>
+          <div class="chat-copy" data-searchable>Всех жду! Достану большие чашки и любимую скатерть 🥰</div>
+          <div class="chat-time">09:48</div>
         </article></div>
-        <div class="tg-new-message" hidden></div>
+        <div class="chat-new-message" hidden></div>
       </div>
-      <div class="tg-compose-panel" id="tg-compose-panel" role="group" aria-label="Запись голосового" hidden>
-        <button type="button" class="tg-icon" data-action="composer-close" aria-label="Отменить запись"><i data-lucide="x" aria-hidden="true"></i></button>
-        <div class="tg-recording" hidden><span class="tg-record-dot"></span><div class="tg-record-copy"><strong class="tg-record-time">0:00</strong><span>Демо голосового</span></div></div>
-        <button type="button" class="tg-icon tg-panel-send" data-action="main" aria-label="Отправить сообщение" disabled><i data-lucide="arrow-up" aria-hidden="true"></i></button>
+      <div class="chat-compose-panel" id="chat-compose-panel" role="group" aria-label="Запись голосового" hidden>
+        <button type="button" class="chat-icon" data-action="composer-close" aria-label="Отменить запись"><i data-lucide="x" aria-hidden="true"></i></button>
+        <div class="chat-recording" hidden><span class="chat-record-dot"></span><div class="chat-record-copy"><strong class="chat-record-time">0:00</strong><span>Демо голосового</span></div></div>
+        <button type="button" class="chat-icon chat-panel-send" data-action="main" aria-label="Отправить сообщение" disabled><i data-lucide="arrow-up" aria-hidden="true"></i></button>
       </div>
-      <div class="tg-composer" role="group" aria-label="Действия чата" inert>
-        <div class="tg-action-item"><button type="button" class="tg-icon tg-action" data-action="attach" aria-label="Файлы: прикрепить фото или видео" aria-expanded="false" aria-controls="tg-attach-menu"><i data-lucide="paperclip" aria-hidden="true"></i></button></div>
-        <div class="tg-message-field"><input class="tg-composer-input" aria-label="Сообщение семье" type="text" maxlength="300" autocomplete="off" placeholder="Сообщение"><button type="button" class="tg-icon tg-inline-send" data-action="inline-send" aria-label="Отправить сообщение" hidden><i data-lucide="arrow-up" aria-hidden="true"></i></button></div>
-        <div class="tg-action-item"><button type="button" class="tg-icon tg-action" data-action="voice-toggle" aria-label="Записать голосовое сообщение" aria-expanded="false" aria-controls="tg-compose-panel"><i data-lucide="mic" aria-hidden="true"></i></button></div>
+      <div class="chat-composer" role="group" aria-label="Действия чата" inert>
+        <div class="chat-action-item"><button type="button" class="chat-icon chat-action" data-action="attach" aria-label="Файлы: прикрепить фото или видео" aria-expanded="false" aria-controls="chat-attach-menu"><i data-lucide="paperclip" aria-hidden="true"></i></button></div>
+        <div class="chat-message-field"><input class="chat-composer-input" aria-label="Сообщение семье" type="text" maxlength="300" autocomplete="off" placeholder="Сообщение"><button type="button" class="chat-icon chat-inline-send" data-action="inline-send" aria-label="Отправить сообщение" hidden><i data-lucide="arrow-up" aria-hidden="true"></i></button></div>
+        <div class="chat-action-item"><button type="button" class="chat-icon chat-action" data-action="voice-toggle" aria-label="Записать голосовое сообщение" aria-expanded="false" aria-controls="chat-compose-panel"><i data-lucide="mic" aria-hidden="true"></i></button></div>
       </div>
-      <section class="tg-chat-picker" id="tg-chat-picker" aria-label="Выбор чата">
-        <h2 class="tg-picker-title">Чаты</h2>
-        <button type="button" class="tg-chat-choice" data-action="chat-open" data-chat="family" aria-label="Открыть чат Семья">
-          <span class="tg-group-avatar" aria-hidden="true">С</span>
-          <span class="tg-choice-copy"><span class="tg-choice-top"><span class="tg-choice-name">Семья</span><span class="tg-choice-time">09:48</span></span><span class="tg-choice-preview">Бабушка: Всех жду! 🥰</span></span>
+      <section class="chat-chat-picker" id="chat-chat-picker" aria-label="Выбор чата">
+        <div class="chat-picker-header">
+          <h2 class="chat-picker-title">Чаты</h2>
+          <button type="button" class="chat-icon chat-profile-button" data-action="settings-open" aria-label="Настройки профиля" aria-controls="chat-settings"><span class="chat-user-avatar" data-user-avatar aria-hidden="true">Т</span></button>
+        </div>
+        <button type="button" class="chat-chat-choice" data-action="chat-open" data-chat="family" aria-label="Открыть чат Семья">
+          <span class="chat-group-avatar" aria-hidden="true">С</span>
+          <span class="chat-choice-copy"><span class="chat-choice-top"><span class="chat-choice-name">Семья</span><span class="chat-choice-time">09:48</span></span><span class="chat-choice-preview">Бабушка: Всех жду! 🥰</span></span>
           <i data-lucide="chevron-right" aria-hidden="true"></i>
         </button>
-        <button type="button" class="tg-chat-choice" data-action="chat-open" data-chat="friends" aria-label="Открыть чат Друзья">
-          <span class="tg-group-avatar tg-friends-avatar" aria-hidden="true">Д</span>
-          <span class="tg-choice-copy"><span class="tg-choice-top"><span class="tg-choice-name">Друзья</span><span class="tg-choice-time">11:18</span></span><span class="tg-choice-preview">Аня: Договорились! До субботы 🙌</span></span>
+        <button type="button" class="chat-chat-choice" data-action="chat-open" data-chat="friends" aria-label="Открыть чат Друзья">
+          <span class="chat-group-avatar chat-friends-avatar" aria-hidden="true">Д</span>
+          <span class="chat-choice-copy"><span class="chat-choice-top"><span class="chat-choice-name">Друзья</span><span class="chat-choice-time">11:18</span></span><span class="chat-choice-preview">Аня: Договорились! До субботы 🙌</span></span>
           <i data-lucide="chevron-right" aria-hidden="true"></i>
         </button>
       </section>
-      <div class="tg-menu" id="tg-attach-menu" aria-label="Прикрепить медиа" hidden><button type="button" class="cursor-interaction" data-action="add-photo"><i data-lucide="image" aria-hidden="true"></i>Фотография</button><button type="button" class="cursor-interaction" data-action="add-video"><i data-lucide="video" aria-hidden="true"></i>Видео</button></div>
-      <div class="tg-dialog" role="dialog" aria-modal="true" aria-label="Просмотр медиа" hidden><div class="tg-dialog-header"><span class="tg-dialog-title">Фото</span><button type="button" class="tg-icon" data-action="media-close" aria-label="Закрыть просмотр"><i data-lucide="x" aria-hidden="true"></i></button></div><div class="tg-dialog-body"><div class="tg-dialog-media"></div><div class="tg-dialog-caption">Наши выходные 🍂</div><div class="tg-dialog-note"></div></div></div>
-      <div class="tg-toast" role="status" aria-live="polite" hidden></div>
+      <section class="chat-settings" id="chat-settings" aria-labelledby="chat-settings-title" hidden>
+        <header class="chat-settings-header">
+          <button type="button" class="chat-icon chat-settings-back" data-action="settings-close" aria-label="Назад к списку чатов"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
+          <h2 id="chat-settings-title">Настройки</h2>
+          <span class="chat-settings-spacer" aria-hidden="true"></span>
+        </header>
+        <form class="chat-settings-form" id="chat-profile-form">
+          <div class="chat-profile-hero">
+            <button type="button" class="chat-avatar-edit" data-action="avatar-change" aria-label="Изменить аватарку"><span class="chat-user-avatar" data-settings-avatar aria-hidden="true">Т</span><span class="chat-avatar-camera" aria-hidden="true"><i data-lucide="camera"></i></span></button>
+            <div class="chat-profile-name">Тимур</div>
+            <div class="chat-profile-login">@timur</div>
+            <div class="chat-avatar-actions"><button type="button" data-action="avatar-change">Изменить фото</button><button type="button" data-action="avatar-remove" hidden>Удалить фото</button></div>
+            <input type="file" id="chat-avatar-file" accept="image/*" aria-label="Выбрать аватарку" hidden>
+          </div>
+          <fieldset class="chat-settings-group">
+            <legend>Профиль</legend>
+            <div class="chat-settings-card">
+              <label class="chat-settings-field" for="chat-profile-name"><span>Имя</span><input id="chat-profile-name" name="displayName" value="Тимур" maxlength="60" autocomplete="nickname" required></label>
+              <label class="chat-settings-field" for="chat-profile-login"><span>Логин</span><input id="chat-profile-login" name="login" value="timur" maxlength="32" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+            </div>
+          </fieldset>
+          <fieldset class="chat-settings-group">
+            <legend>Пароль</legend>
+            <div class="chat-settings-card">
+              <label class="chat-settings-field" for="chat-profile-password"><span>Новый пароль</span><input id="chat-profile-password" name="newPassword" type="password" placeholder="Не изменён" minlength="8" autocomplete="new-password" aria-describedby="chat-password-hint"></label>
+              <label class="chat-settings-field" for="chat-profile-password-repeat"><span>Повторите пароль</span><input id="chat-profile-password-repeat" name="confirmPassword" type="password" placeholder="Ещё раз" autocomplete="new-password" aria-describedby="chat-password-hint"></label>
+            </div>
+            <p class="chat-settings-hint" id="chat-password-hint">Для смены — не менее 8 символов. Иначе оставьте поля пустыми.</p>
+          </fieldset>
+          <button type="submit" class="chat-settings-save" disabled><i data-lucide="check" aria-hidden="true"></i>Сохранить изменения</button>
+          <button type="button" class="chat-settings-logout" data-action="account-logout"><i data-lucide="log-out" aria-hidden="true"></i>Выйти из аккаунта</button>
+        </form>
+      </section>
+      <section class="chat-account-screen" aria-labelledby="chat-account-title" hidden>
+        <div class="chat-account-content"><span class="chat-account-symbol" aria-hidden="true"><i data-lucide="log-out"></i></span><h2 id="chat-account-title">Вы вышли из аккаунта</h2><p>Это макет — можно вернуться и продолжить просмотр.</p><button type="button" class="chat-settings-save" data-action="account-return">Вернуться в макет</button></div>
+      </section>
+      <div class="chat-menu" id="chat-attach-menu" aria-label="Прикрепить медиа" hidden><button type="button" class="cursor-interaction" data-action="add-photo"><i data-lucide="image" aria-hidden="true"></i>Фотография</button><button type="button" class="cursor-interaction" data-action="add-video"><i data-lucide="video" aria-hidden="true"></i>Видео</button></div>
+      <div class="chat-dialog" role="dialog" aria-modal="true" aria-label="Просмотр медиа" hidden><div class="chat-dialog-header"><span class="chat-dialog-title">Фото</span><button type="button" class="chat-icon" data-action="media-close" aria-label="Закрыть просмотр"><i data-lucide="x" aria-hidden="true"></i></button></div><div class="chat-dialog-body"><div class="chat-dialog-media"></div><div class="chat-dialog-caption">Наши выходные 🍂</div><div class="chat-dialog-note"></div></div></div>
+      <div class="chat-toast" role="status" aria-live="polite" hidden></div>
     </article>
   </div>
 </main>
-<template id="tg-friends-history">
-  <div class="tg-date"><span>Сегодня</span></div>
-  <div class="tg-message-row tg-friend-max"><span class="tg-avatar" aria-label="Аватарка Макса">М</span><article class="tg-message">
-    <div class="tg-author"><span class="tg-author-name">Макс</span></div>
-    <div class="tg-copy" data-searchable>Есть планы на субботу? Предлагаю выбраться к озеру 🌿</div>
-    <div class="tg-time">11:02</div>
+<template id="chat-friends-history">
+  <div class="chat-date"><span>Сегодня</span></div>
+  <div class="chat-message-row chat-friend-max"><span class="chat-avatar" aria-label="Аватарка Макса">М</span><article class="chat-message">
+    <div class="chat-author"><span class="chat-author-name">Макс</span></div>
+    <div class="chat-copy" data-searchable>Есть планы на субботу? Предлагаю выбраться к озеру 🌿</div>
+    <div class="chat-time">11:02</div>
   </article></div>
-  <div class="tg-message-row tg-message-group" role="group" aria-label="Аня, два сообщения подряд">
-    <span class="tg-avatar" aria-label="Аватарка Ани">А</span>
-    <div class="tg-message-stack">
-      <article class="tg-message"><div class="tg-author"><span class="tg-author-name">Аня</span></div><div class="tg-copy" data-searchable>Я за! Давно хотела туда съездить.</div><div class="tg-time">11:04</div></article>
-      <article class="tg-message" aria-label="Аня, следующее сообщение"><div class="tg-copy" data-searchable>Возьму термос и что-нибудь к чаю ☕️</div><div class="tg-time">11:05</div></article>
+  <div class="chat-message-row chat-message-group" role="group" aria-label="Аня, два сообщения подряд">
+    <span class="chat-avatar" aria-label="Аватарка Ани">А</span>
+    <div class="chat-message-stack">
+      <article class="chat-message"><div class="chat-author"><span class="chat-author-name">Аня</span></div><div class="chat-copy" data-searchable>Я за! Давно хотела туда съездить.</div><div class="chat-time">11:04</div></article>
+      <article class="chat-message" aria-label="Аня, следующее сообщение"><div class="chat-copy" data-searchable>Возьму термос и что-нибудь к чаю ☕️</div><div class="chat-time">11:05</div></article>
     </div>
   </div>
-  <div class="tg-message-row tg-own"><article class="tg-message tg-own" aria-label="Ваше сообщение">
-    <div class="tg-copy" data-searchable>Отличная идея! Могу забрать вас по дороге 🚗</div>
-    <div class="tg-time">11:07<i data-lucide="check-check" aria-label="Прочитано"></i></div>
+  <div class="chat-message-row chat-own"><article class="chat-message chat-own" aria-label="Ваше сообщение">
+    <div class="chat-copy" data-searchable>Отличная идея! Могу забрать вас по дороге 🚗</div>
+    <div class="chat-time">11:07<i data-lucide="check-check" aria-label="Прочитано"></i></div>
   </article></div>
-  <div class="tg-message-row tg-friend-lena"><span class="tg-avatar" aria-label="Аватарка Лены">Л</span><article class="tg-message tg-media-message">
-    <div class="tg-author"><span class="tg-author-name">Лена</span></div>
-    <div class="tg-attachments">
-      <button type="button" class="tg-attachment" data-action="photo" aria-label="Открыть фотографию озера"><div class="tg-scene"><div class="tg-hill"></div><div class="tg-hill tg-hill-second"></div><div class="tg-shore"></div><div class="tg-tree"></div></div></button>
-      <button type="button" class="tg-attachment" data-action="video" aria-label="Открыть видео у озера"><div class="tg-scene tg-scene-alt"><div class="tg-hill"></div><div class="tg-hill tg-hill-second"></div><div class="tg-shore"></div><div class="tg-tree"></div></div><span class="tg-video-label"><i data-lucide="play" aria-hidden="true"></i>0:18</span></button>
+  <div class="chat-message-row chat-friend-lena"><span class="chat-avatar" aria-label="Аватарка Лены">Л</span><article class="chat-message chat-media-message">
+    <div class="chat-author"><span class="chat-author-name">Лена</span></div>
+    <div class="chat-attachments">
+      <button type="button" class="chat-attachment" data-action="photo" aria-label="Открыть фотографию озера"><div class="chat-scene"><div class="chat-hill"></div><div class="chat-hill chat-hill-second"></div><div class="chat-shore"></div><div class="chat-tree"></div></div></button>
+      <button type="button" class="chat-attachment" data-action="video" aria-label="Открыть видео у озера"><div class="chat-scene chat-scene-alt"><div class="chat-hill"></div><div class="chat-hill chat-hill-second"></div><div class="chat-shore"></div><div class="chat-tree"></div></div><span class="chat-video-label"><i data-lucide="play" aria-hidden="true"></i>0:18</span></button>
     </div>
-    <div class="tg-copy" data-searchable>Вот то место, о котором рассказывала. Там есть дорожка вдоль воды 📷</div><div class="tg-time">11:10</div>
+    <div class="chat-copy" data-searchable>Вот то место, о котором рассказывала. Там есть дорожка вдоль воды 📷</div><div class="chat-time">11:10</div>
   </article></div>
-  <div class="tg-message-row tg-friend-max"><span class="tg-avatar" aria-label="Аватарка Макса">М</span><article class="tg-message">
-    <div class="tg-author"><span class="tg-author-name">Макс</span></div>
-    <div class="tg-voice"><button type="button" class="tg-icon tg-play" data-action="voice-play" aria-label="Прослушать пример голосового сообщения" aria-pressed="false"><i data-lucide="play" aria-hidden="true"></i></button><div class="tg-wave-wrap"><div class="tg-wave" aria-hidden="true"></div><div class="tg-duration">0:12</div></div></div>
-    <div class="tg-time">11:12</div>
+  <div class="chat-message-row chat-friend-max"><span class="chat-avatar" aria-label="Аватарка Макса">М</span><article class="chat-message">
+    <div class="chat-author"><span class="chat-author-name">Макс</span></div>
+    <div class="chat-voice"><button type="button" class="chat-icon chat-play" data-action="voice-play" aria-label="Прослушать пример голосового сообщения" aria-pressed="false"><i data-lucide="play" aria-hidden="true"></i></button><div class="chat-wave-wrap"><div class="chat-wave" aria-hidden="true"></div><div class="chat-duration">0:12</div></div></div>
+    <div class="chat-time">11:12</div>
   </article></div>
-  <div class="tg-message-row tg-own"><article class="tg-message tg-own" aria-label="Ваше сообщение">
-    <div class="tg-copy" data-searchable>Тогда встречаемся в 10:00 у кофейни. Плед и настолку возьму с собой 🎲</div>
-    <div class="tg-time">11:15<i data-lucide="check-check" aria-label="Прочитано"></i></div>
+  <div class="chat-message-row chat-own"><article class="chat-message chat-own" aria-label="Ваше сообщение">
+    <div class="chat-copy" data-searchable>Тогда встречаемся в 10:00 у кофейни. Плед и настолку возьму с собой 🎲</div>
+    <div class="chat-time">11:15<i data-lucide="check-check" aria-label="Прочитано"></i></div>
   </article></div>
-  <div class="tg-message-row"><span class="tg-avatar" aria-label="Аватарка Ани">А</span><article class="tg-message">
-    <div class="tg-author"><span class="tg-author-name">Аня</span></div>
-    <div class="tg-copy" data-searchable>Договорились! До субботы 🙌</div><div class="tg-time">11:18</div>
+  <div class="chat-message-row"><span class="chat-avatar" aria-label="Аватарка Ани">А</span><article class="chat-message">
+    <div class="chat-author"><span class="chat-author-name">Аня</span></div>
+    <div class="chat-copy" data-searchable>Договорились! До субботы 🙌</div><div class="chat-time">11:18</div>
   </article></div>
-  <div class="tg-new-message" hidden></div>
+  <div class="chat-new-message" hidden></div>
 </template>
 <noscript>Для просмотра интерактивного макета включите JavaScript.</noscript>
 </body>
