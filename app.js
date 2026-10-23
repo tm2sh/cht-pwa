@@ -14,21 +14,53 @@
   const dialog = root.querySelector('.chat-dialog');
   const chatPicker = root.querySelector('.chat-chat-picker');
   const backButton = root.querySelector('[data-action="chats-back"]');
+  const chatInfoButton = root.querySelector('[data-action="chat-info-open"]');
+  const chatInfo = root.querySelector('.chat-info');
+  const chatInfoForm = root.querySelector('#chat-info-form');
+  const chatInfoName = root.querySelector('#chat-info-name');
+  const chatAvatarFile = root.querySelector('#chat-info-avatar-file');
   const settings = root.querySelector('.chat-settings');
   const profileButton = root.querySelector('[data-action="settings-open"]');
-  const profileForm = root.querySelector('.chat-settings-form');
+  const profileForm = root.querySelector('#chat-profile-form');
   const profileName = root.querySelector('#chat-profile-name');
   const profileLogin = root.querySelector('#chat-profile-login');
   const profilePassword = root.querySelector('#chat-profile-password');
   const profilePasswordRepeat = root.querySelector('#chat-profile-password-repeat');
   const avatarFile = root.querySelector('#chat-avatar-file');
-  const accountScreen = root.querySelector('.chat-account-screen');
+  const authScreen = root.querySelector('.chat-auth');
+  const authForm = root.querySelector('#chat-auth-form');
+  const authLogin = root.querySelector('#chat-auth-login');
+  const authPassword = root.querySelector('#chat-auth-password');
+  const authPasswordToggle = root.querySelector('[data-action="auth-password-toggle"]');
+  const authError = root.querySelector('#chat-auth-error');
+  // Demo-only sign-in; a real account service is not connected.
+  const demoCredentials = {login:'admin', password:'admin'};
+  let authenticated = false;
   // Profile edits are local to this demo page; passwords are never retained.
-  const profile = {name:'Тимур', login:'timur', avatar:''};
+  const profile = {name:'Тимур', login:'admin', avatar:''};
   let draftAvatar = '', avatarRequest = 0;
+  let draftChatAvatar = '', chatAvatarRequest = 0;
   const chats = {
-    family: {name:'Семья', avatar:'С', members:'6 участников, 2 в сети', nodes:[...history.childNodes], draft:''},
-    friends: {name:'Друзья', avatar:'Д', members:'4 участника, 2 в сети', nodes:[...document.getElementById('chat-friends-history').content.cloneNode(true).childNodes], draft:''},
+    family: {
+      name:'Семья', photo:'', members:'6 участников, 2 в сети', nodes:[...history.childNodes], draft:'',
+      people:[
+        {self:true, online:true},
+        {name:'Мама', online:true, color:'linear-gradient(145deg, #b5a6e9, #8d7aca)'},
+        {name:'Папа', online:false, color:'linear-gradient(145deg, #8ab9e5, #5e88b4)'},
+        {name:'Бабушка', online:false, color:'linear-gradient(145deg, #d0ace8, #a17fc0)'},
+        {name:'Дедушка', online:false, color:'linear-gradient(145deg, #9bc8b7, #659e8b)'},
+        {name:'Саша', online:false, color:'linear-gradient(145deg, #e9b79c, #c28e77)'},
+      ],
+    },
+    friends: {
+      name:'Друзья', photo:'', members:'4 участника, 2 в сети', nodes:[...document.getElementById('chat-friends-history').content.cloneNode(true).childNodes], draft:'',
+      people:[
+        {self:true, online:true},
+        {name:'Аня', online:true, color:'linear-gradient(145deg, #b5a6e9, #8d7aca)'},
+        {name:'Макс', online:false, color:'linear-gradient(145deg, #8ab9e5, #5e88b4)'},
+        {name:'Лена', online:false, color:'linear-gradient(145deg, #9bc8b7, #659e8b)'},
+      ],
+    },
   };
   let activeChat = 'family';
   const state = {radius:16,avatarSize:40,blur:42};
@@ -38,7 +70,18 @@
   document.addEventListener('pointerdown', () => {
     documentRoot.dataset.inputModality = 'pointer';
   }, {capture:true, passive:true});
+  function preventPageZoom(event) {
+    if(event.cancelable) event.preventDefault();
+  }
+  // WebKit may ignore the viewport zoom limits; cancel its native pinch events.
+  document.addEventListener('gesturestart', preventPageZoom, {passive:false});
+  document.addEventListener('gesturechange', preventPageZoom, {passive:false});
+  // Trackpad pinches arrive as modified wheel events. Ordinary scrolling stays native.
+  document.addEventListener('wheel', event => {
+    if(event.ctrlKey || event.metaKey) preventPageZoom(event);
+  }, {passive:false});
   document.addEventListener('keydown', event => {
+    if((event.ctrlKey || event.metaKey) && ['+', '=', '-', '_', '0'].includes(event.key)) preventPageZoom(event);
     if(event.key === 'Tab' || event.key === 'Escape') documentRoot.dataset.inputModality = 'keyboard';
   }, {capture:true});
   let viewportFrame = 0;
@@ -62,7 +105,7 @@
   new ResizeObserver(keepLatestVisible).observe(history);
   function updateViewport() {
     viewportFrame = 0;
-    // Keep native pinch zoom; changing the layout while zoomed would fight it.
+    // A browser or system override may still zoom; do not mistake it for a keyboard.
     if(viewport && Math.abs(viewport.scale - 1) > .01) return;
     // Only the message history should scroll. A normal-flow root avoids iOS
     // clipping, but text focus can still pan the document during keyboard entry.
@@ -95,7 +138,8 @@
   window.addEventListener('scroll', scheduleViewport, {passive:true});
   window.addEventListener('pageshow', () => {
     scheduleViewport();
-    setChatPicker(true, false);
+    if(authenticated) setChatPicker(true, false);
+    else showLogin();
     requestAnimationFrame(scrollToLatest);
   });
   viewport?.addEventListener('resize', scheduleViewport, {passive:true});
@@ -146,9 +190,11 @@
   function toggleMenu(open) { if(open)document.activeElement?.blur(); menu.hidden=!open; attachButton.setAttribute('aria-expanded',String(open)); }
   function closeComposer() { if(recording)stopRecording(); composePanel.hidden=true; updateComposer(); }
   function setChatPicker(open,focus=true) {
+    if(!authenticated) return;
+    authScreen.hidden = true;
     if(open) {
+      if(!chatInfo.hidden) closeChatInfo(false);
       if(!settings.hidden) closeSettings(false);
-      accountScreen.hidden=true;
     }
     if(open && !dialog.hidden) closeMedia();
     if(open && !searchPanel.hidden) toggleSearch(false);
@@ -167,6 +213,68 @@
     document.title = title+' — PWA-макет';
     app.setAttribute('aria-label', title+' · Liquid Glass');
   }
+  function clearLoginError() {
+    authError.hidden = true;
+    authError.textContent = '';
+    authLogin.removeAttribute('aria-invalid');
+    authPassword.removeAttribute('aria-invalid');
+  }
+  function resetPasswordVisibility() {
+    authPassword.type = 'password';
+    authPasswordToggle.setAttribute('aria-pressed', 'false');
+    buttonIcon(authPasswordToggle, 'eye', 'Показать пароль');
+  }
+  function showLogin() {
+    document.activeElement?.blur();
+    if(!chatInfo.hidden) closeChatInfo(false);
+    if(!settings.hidden) closeSettings(false);
+    if(!dialog.hidden) closeMedia();
+    if(!searchPanel.hidden) toggleSearch(false);
+    document.activeElement?.blur();
+    toggleMenu(false);
+    closeComposer();
+    if(voiceTimer) stopVoice();
+    clearTimeout(toastTimer);
+    root.querySelector('.chat-toast').hidden = true;
+    authenticated = false;
+    chatPicker.hidden = true;
+    authScreen.hidden = false;
+    authForm.reset();
+    resetPasswordVisibility();
+    clearLoginError();
+    authScreen.scrollTop = 0;
+    setScreen(authScreen, 'Вход');
+  }
+  authForm.addEventListener('input', clearLoginError);
+  authForm.addEventListener('submit', event => {
+    event.preventDefault();
+    const missingLogin = !authLogin.value.trim();
+    const missingPassword = !authPassword.value;
+    clearLoginError();
+    if(missingLogin || missingPassword) {
+      authError.textContent = missingLogin && missingPassword ? 'Введите логин и пароль.' : missingLogin ? 'Введите логин.' : 'Введите пароль.';
+      authError.hidden = false;
+      if(missingLogin) authLogin.setAttribute('aria-invalid', 'true');
+      if(missingPassword) authPassword.setAttribute('aria-invalid', 'true');
+      (missingLogin ? authLogin : authPassword).focus({preventScroll:true});
+      return;
+    }
+    if(authLogin.value !== demoCredentials.login || authPassword.value !== demoCredentials.password) {
+      authError.textContent = 'Неверный логин или пароль. Проверьте данные и попробуйте ещё раз.';
+      authError.hidden = false;
+      authLogin.setAttribute('aria-invalid', 'true');
+      authPassword.setAttribute('aria-invalid', 'true');
+      return;
+    }
+    authenticated = true;
+    authPassword.value = '';
+    resetPasswordVisibility();
+    setChatPicker(true);
+    chatPicker.scrollTop = 0;
+  });
+  authPasswordToggle.addEventListener('pointerdown', event => {
+    if(document.activeElement === authPassword) event.preventDefault();
+  });
   function renderAvatar(host, avatar, name) {
     host.replaceChildren();
     if(avatar) {
@@ -181,10 +289,10 @@
   function updateProfileDraft() {
     const name = profileName.value.trim() || profile.name;
     renderAvatar(root.querySelector('[data-settings-avatar]'), draftAvatar, name);
-    root.querySelector('.chat-profile-name').textContent = name;
-    root.querySelector('.chat-profile-login').textContent = '@'+(profileLogin.value.trim() || profile.login);
+    settings.querySelector('.chat-profile-name').textContent = name;
+    settings.querySelector('.chat-profile-login').textContent = '@'+(profileLogin.value.trim() || profile.login);
     root.querySelector('[data-action="avatar-remove"]').hidden = !draftAvatar;
-    root.querySelector('.chat-settings-save').disabled = !(
+    profileForm.querySelector('.chat-settings-save').disabled = !(
       profileName.value.trim() !== profile.name || profileLogin.value.trim() !== profile.login ||
       draftAvatar !== profile.avatar || profilePassword.value || profilePasswordRepeat.value
     );
@@ -272,7 +380,153 @@
     updateProfileDraft();
     toast(passwordChanged ? 'Профиль обновлён · смена пароля показана без сохранения' : 'Профиль обновлён в макете');
   });
+  function updateChatAppearance(chatId) {
+    const chat = chats[chatId];
+    const choice = chatPicker.querySelector('[data-chat="'+chatId+'"]');
+    choice.querySelector('.chat-choice-name').textContent = chat.name;
+    choice.setAttribute('aria-label', 'Открыть чат '+chat.name);
+    renderAvatar(choice.querySelector('.chat-group-avatar'), chat.photo, chat.name);
+    if(chatId !== activeChat) return;
+    root.querySelector('.chat-heading-name').textContent = chat.name;
+    const subtitle = root.querySelector('.chat-heading-sub');
+    subtitle.textContent = chat.members;
+    subtitle.title = chat.members;
+    const avatar = chatInfoButton.querySelector('.chat-group-avatar');
+    renderAvatar(avatar, chat.photo, chat.name);
+    avatar.classList.toggle('chat-friends-avatar', chatId === 'friends');
+    chatInfoButton.setAttribute('aria-label', 'Настройки чата «'+chat.name+'»');
+    history.setAttribute('aria-label', 'Сообщения чата «'+chat.name+'», прокручиваемая лента');
+    input.setAttribute('aria-label', 'Сообщение в чат «'+chat.name+'»');
+  }
+  function renderChatMembers() {
+    const list = chatInfo.querySelector('.chat-members-list');
+    list.replaceChildren();
+    const people = chats[activeChat].people;
+    chatInfo.querySelector('.chat-members-count').textContent = people.length;
+    people.forEach(person => {
+      const name = person.self ? profile.name : person.name;
+      const row = document.createElement('li');
+      row.className = 'chat-member';
+      const avatar = document.createElement('span');
+      avatar.className = 'chat-member-avatar';
+      avatar.setAttribute('aria-hidden', 'true');
+      if(person.color) avatar.style.setProperty('--member-avatar-bg', person.color);
+      const face = document.createElement('span');
+      face.className = 'chat-user-avatar';
+      renderAvatar(face, person.self ? profile.avatar : '', name);
+      avatar.append(face);
+      if(person.online) {
+        const dot = document.createElement('span');
+        dot.className = 'chat-member-online';
+        avatar.append(dot);
+      }
+      const copy = document.createElement('div');
+      copy.className = 'chat-member-copy';
+      const title = document.createElement('div');
+      title.className = 'chat-member-name';
+      const label = document.createElement('span');
+      label.textContent = name;
+      title.append(label);
+      if(person.self) {
+        const badge = document.createElement('span');
+        badge.className = 'chat-member-self';
+        badge.textContent = 'Вы';
+        title.append(badge);
+      }
+      const status = document.createElement('span');
+      status.className = 'chat-member-status'+(person.online ? ' is-online' : '');
+      status.textContent = person.online ? 'в сети' : 'не в сети';
+      copy.append(title, status);
+      row.append(avatar, copy);
+      list.append(row);
+    });
+  }
+  function updateChatInfoDraft() {
+    const chat = chats[activeChat];
+    const name = chatInfoName.value.trim() || chat.name;
+    const avatar = chatInfo.querySelector('[data-chat-info-avatar]');
+    renderAvatar(avatar, draftChatAvatar, name);
+    avatar.classList.toggle('chat-friends-avatar', activeChat === 'friends');
+    chatInfo.querySelector('[data-chat-info-name]').textContent = name;
+    chatInfo.querySelector('[data-chat-info-summary]').textContent = chat.members;
+    chatInfo.querySelector('[data-action="chat-avatar-remove"]').hidden = !draftChatAvatar;
+    chatInfoForm.querySelector('button[type="submit"]').disabled = chatInfoName.value.trim() === chat.name && draftChatAvatar === chat.photo;
+  }
+  function openChatInfo() {
+    document.activeElement?.blur();
+    toggleMenu(false);
+    closeComposer();
+    if(voiceTimer) stopVoice();
+    if(!searchPanel.hidden) toggleSearch(false);
+    clearTimeout(toastTimer);
+    root.querySelector('.chat-toast').hidden = true;
+    chatInfoName.value = chats[activeChat].name;
+    chatInfoName.setCustomValidity('');
+    draftChatAvatar = chats[activeChat].photo;
+    updateChatInfoDraft();
+    renderChatMembers();
+    chatInfo.hidden = false;
+    chatInfo.scrollTop = 0;
+    setScreen(chatInfo, 'О чате «'+chats[activeChat].name+'»');
+    chatInfo.querySelector('[data-action="chat-info-close"]').focus({preventScroll:true});
+  }
+  function closeChatInfo(focus=true) {
+    document.activeElement?.blur();
+    chatAvatarRequest++;
+    if(draftChatAvatar && draftChatAvatar !== chats[activeChat].photo) URL.revokeObjectURL(draftChatAvatar);
+    draftChatAvatar = '';
+    chatAvatarFile.value = '';
+    chatInfo.hidden = true;
+    clearTimeout(toastTimer);
+    root.querySelector('.chat-toast').hidden = true;
+    setChatPicker(false, false);
+    if(focus) chatInfoButton.focus({preventScroll:true});
+  }
+  function removeChatAvatar() {
+    chatAvatarRequest++;
+    if(draftChatAvatar && draftChatAvatar !== chats[activeChat].photo) URL.revokeObjectURL(draftChatAvatar);
+    draftChatAvatar = '';
+    updateChatInfoDraft();
+  }
+  chatAvatarFile.addEventListener('change', () => {
+    const file = chatAvatarFile.files[0];
+    chatAvatarFile.value = '';
+    if(!file) return;
+    const request = ++chatAvatarRequest;
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      if(request !== chatAvatarRequest || chatInfo.hidden) { URL.revokeObjectURL(url); return; }
+      if(draftChatAvatar && draftChatAvatar !== chats[activeChat].photo) URL.revokeObjectURL(draftChatAvatar);
+      draftChatAvatar = url;
+      updateChatInfoDraft();
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      if(request === chatAvatarRequest && !chatInfo.hidden) toast('Не удалось открыть фото. Попробуйте другое изображение.');
+    };
+    image.src = url;
+  });
+  chatInfoName.addEventListener('input', () => {
+    chatInfoName.setCustomValidity('');
+    updateChatInfoDraft();
+  });
+  chatInfoForm.addEventListener('submit', event => {
+    event.preventDefault();
+    chatInfoName.setCustomValidity(chatInfoName.value.trim() ? '' : 'Укажите название чата.');
+    if(!chatInfoForm.reportValidity()) return;
+    const chat = chats[activeChat];
+    const oldPhoto = chat.photo;
+    chat.name = chatInfoName.value.trim();
+    chat.photo = draftChatAvatar;
+    if(oldPhoto && oldPhoto !== chat.photo) URL.revokeObjectURL(oldPhoto);
+    updateChatAppearance(activeChat);
+    updateChatInfoDraft();
+    setScreen(chatInfo, 'О чате «'+chat.name+'»');
+    toast('Настройки чата обновлены в макете');
+  });
   function openChat(chatId) {
+    if(!authenticated) return;
     const next = chats[chatId];
     if(!next) return;
     document.activeElement?.blur();
@@ -286,19 +540,11 @@
       activeChat = chatId;
       history.replaceChildren(...next.nodes);
       input.value = next.draft;
-      root.querySelector('.chat-heading-name').textContent = next.name;
-      const subtitle = root.querySelector('.chat-heading-sub');
-      subtitle.textContent = next.members;
-      subtitle.title = next.members;
-      const avatar = root.querySelector('.chat-family-pill .chat-group-avatar');
-      avatar.textContent = next.avatar;
-      avatar.classList.toggle('chat-friends-avatar', chatId === 'friends');
-      history.setAttribute('aria-label', 'Сообщения чата «'+next.name+'», прокручиваемая лента');
-      input.setAttribute('aria-label', 'Сообщение в чат «'+next.name+'»');
       history.querySelectorAll('.chat-wave').forEach(wave);
       updateComposer();
       icons();
     }
+    updateChatAppearance(chatId);
     setChatPicker(false);
     requestAnimationFrame(scrollToLatest);
   }
@@ -363,17 +609,23 @@
   root.addEventListener('click',event=> {
     const button=event.target.closest('button[data-action]'); if(!button) return;
     const action=button.dataset.action;
+    if(action==='auth-password-toggle') {
+      const reveal = authPassword.type === 'password';
+      authPassword.type = reveal ? 'text' : 'password';
+      authPasswordToggle.setAttribute('aria-pressed', String(reveal));
+      buttonIcon(authPasswordToggle, reveal ? 'eye-off' : 'eye', reveal ? 'Скрыть пароль' : 'Показать пароль');
+      return;
+    }
+    if(!authenticated) return;
+    if(action==='chat-info-open') openChatInfo();
+    if(action==='chat-info-close') closeChatInfo();
+    if(action==='chat-avatar-change') chatAvatarFile.click();
+    if(action==='chat-avatar-remove') removeChatAvatar();
     if(action==='settings-open') openSettings();
     if(action==='settings-close') closeSettings();
     if(action==='avatar-change') avatarFile.click();
     if(action==='avatar-remove') removeAvatar();
-    if(action==='account-logout') {
-      closeSettings(false);
-      accountScreen.hidden=false;
-      setScreen(accountScreen, 'Вы вышли из аккаунта');
-      root.querySelector('[data-action="account-return"]').focus({preventScroll:true});
-    }
-    if(action==='account-return') { setChatPicker(true, false); profileButton.focus({preventScroll:true}); }
+    if(action==='account-logout') showLogin();
     if(action==='chats-back'){setChatPicker(true);}
     if(action==='chat-open'){openChat(button.dataset.chat);}
     if(action==='search-open'){toggleSearch(searchPanel.hidden);}
@@ -401,12 +653,12 @@
   input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.isComposing){event.preventDefault();if(input.value.trim())send();}});
   searchInput.addEventListener('input',renderSearch);
   searchInput.addEventListener('keydown',event=>{if(event.key==='Enter'&&matches.length){event.preventDefault();activeMatch=(activeMatch+(event.shiftKey?-1:1)+matches.length)%matches.length;updateMatch();}});
-  root.addEventListener('keydown',event=>{if(event.key==='Escape'){if(!settings.hidden)closeSettings();else if(!accountScreen.hidden){setChatPicker(true,false);profileButton.focus({preventScroll:true});}else if(!chatPicker.hidden){setChatPicker(false);}else if(!dialog.hidden)closeMedia();else if(!menu.hidden)toggleMenu(false);else if(!composePanel.hidden)closeComposer();else if(!searchPanel.hidden)toggleSearch(false);}if(!dialog.hidden&&event.key==='Tab'){event.preventDefault();dialog.querySelector('button').focus();}});
+  document.addEventListener('keydown',event=>{if(!authenticated)return;if(event.key==='Escape'){if(!chatInfo.hidden)closeChatInfo();else if(!settings.hidden)closeSettings();else if(!chatPicker.hidden){setChatPicker(false);}else if(!dialog.hidden)closeMedia();else if(!menu.hidden)toggleMenu(false);else if(!composePanel.hidden)closeComposer();else if(!searchPanel.hidden)toggleSearch(false);}if(!dialog.hidden&&event.key==='Tab'){event.preventDefault();dialog.querySelector('button').focus();}});
   function renderDesign() { app.style.setProperty('--chat-radius',state.radius+'px');app.style.setProperty('--chat-avatar',state.avatarSize+'px');app.style.setProperty('--chat-blur',state.blur+'px'); }
   renderDesign();
   window.addEventListener('pagehide',()=>{clearInterval(recordTimer);clearInterval(voiceTimer);clearTimeout(toastTimer);},{once:true});
   icons();
-  setChatPicker(true, false);
+  showLogin();
   requestAnimationFrame(scrollToLatest);
   if('serviceWorker' in navigator && window.isSecureContext) {
     navigator.serviceWorker.register('./sw.js', {scope:'./', updateViaCache:'none'})

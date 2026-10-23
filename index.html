@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#e9eff7" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#101c2c" media="(prefers-color-scheme: dark)">
@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Семья">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Чаты — PWA-макет</title>
+  <title>Вход — PWA-макет</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
   <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
@@ -19,18 +19,18 @@
     // iOS can expose navigator.standalone before its display-mode media query.
     if (navigator.standalone) document.documentElement.dataset.displayMode = 'standalone';
   </script>
-  <link rel="stylesheet" href="./styles.css?v=14">
+  <link rel="stylesheet" href="./styles.css?v=17">
   <script src="./vendor/lucide.min.js" defer></script>
-  <script src="./app.js?v=14" defer></script>
+  <script src="./app.js?v=17" defer></script>
 </head>
 <body>
 <main id="chat-ui">
   <div class="chat-stage">
-    <article class="chat-app" aria-label="Чаты · Liquid Glass">
+    <article class="chat-app" aria-label="Вход · Liquid Glass">
       <header class="chat-header" inert>
         <button type="button" class="chat-icon" data-action="chats-back" aria-label="Назад к выбору чата" aria-controls="chat-chat-picker"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
-        <div class="chat-family-pill"><div class="chat-group-avatar" aria-hidden="true">С</div>
-        <div class="chat-heading"><div class="chat-heading-name">Семья</div><div class="chat-heading-sub" title="6 участников, 2 в сети">6 участников, 2 в сети</div></div></div>
+        <button type="button" class="chat-family-pill" data-action="chat-info-open" aria-label="Настройки чата «Семья»" aria-controls="chat-info"><span class="chat-group-avatar" aria-hidden="true">С</span>
+        <span class="chat-heading"><span class="chat-heading-name">Семья</span><span class="chat-heading-sub" title="6 участников, 2 в сети">6 участников, 2 в сети</span></span></button>
         <button type="button" class="chat-icon" data-action="search-open" aria-label="Поиск по сообщениям" aria-expanded="false" aria-controls="chat-search-panel"><i data-lucide="search" aria-hidden="true"></i></button>
       </header>
       <section id="chat-search-panel" class="chat-search" aria-label="Поиск по переписке" hidden>
@@ -115,7 +115,7 @@
         <div class="chat-message-field"><input class="chat-composer-input" aria-label="Сообщение семье" type="text" maxlength="300" autocomplete="off" placeholder="Сообщение"></div>
         <div class="chat-action-item"><button type="button" class="chat-icon chat-action" data-action="composer-action" data-mode="voice" aria-label="Записать голосовое сообщение" aria-expanded="false" aria-controls="chat-compose-panel"><i data-lucide="mic" aria-hidden="true"></i></button></div>
       </div>
-      <section class="chat-chat-picker" id="chat-chat-picker" aria-label="Выбор чата">
+      <section class="chat-chat-picker" id="chat-chat-picker" aria-label="Выбор чата" hidden inert>
         <div class="chat-picker-header">
           <h2 class="chat-picker-title">Чаты</h2>
           <button type="button" class="chat-icon chat-profile-button" data-action="settings-open" aria-label="Настройки профиля" aria-controls="chat-settings"><span class="chat-user-avatar" data-user-avatar aria-hidden="true">Т</span></button>
@@ -141,7 +141,7 @@
           <div class="chat-profile-hero">
             <button type="button" class="chat-avatar-edit" data-action="avatar-change" aria-label="Изменить аватарку"><span class="chat-user-avatar" data-settings-avatar aria-hidden="true">Т</span><span class="chat-avatar-camera" aria-hidden="true"><i data-lucide="camera"></i></span></button>
             <div class="chat-profile-name">Тимур</div>
-            <div class="chat-profile-login">@timur</div>
+            <div class="chat-profile-login">@admin</div>
             <div class="chat-avatar-actions"><button type="button" data-action="avatar-change">Изменить фото</button><button type="button" data-action="avatar-remove" hidden>Удалить фото</button></div>
             <input type="file" id="chat-avatar-file" accept="image/*" aria-label="Выбрать аватарку" hidden>
           </div>
@@ -149,7 +149,7 @@
             <legend>Профиль</legend>
             <div class="chat-settings-card">
               <label class="chat-settings-field" for="chat-profile-name"><span>Имя</span><input id="chat-profile-name" name="displayName" value="Тимур" maxlength="60" autocomplete="nickname" required></label>
-              <label class="chat-settings-field" for="chat-profile-login"><span>Логин</span><input id="chat-profile-login" name="login" value="timur" maxlength="32" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+              <label class="chat-settings-field" for="chat-profile-login"><span>Логин</span><input id="chat-profile-login" name="login" value="admin" maxlength="32" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
             </div>
           </fieldset>
           <fieldset class="chat-settings-group">
@@ -164,8 +164,44 @@
           <button type="button" class="chat-settings-logout" data-action="account-logout"><i data-lucide="log-out" aria-hidden="true"></i>Выйти из аккаунта</button>
         </form>
       </section>
-      <section class="chat-account-screen" aria-labelledby="chat-account-title" hidden>
-        <div class="chat-account-content"><span class="chat-account-symbol" aria-hidden="true"><i data-lucide="log-out"></i></span><h2 id="chat-account-title">Вы вышли из аккаунта</h2><p>Это макет — можно вернуться и продолжить просмотр.</p><button type="button" class="chat-settings-save" data-action="account-return">Вернуться в макет</button></div>
+      <section class="chat-info" id="chat-info" aria-labelledby="chat-info-title" hidden>
+        <header class="chat-settings-header">
+          <button type="button" class="chat-icon chat-settings-back" data-action="chat-info-close" aria-label="Назад к переписке"><i data-lucide="chevron-left" aria-hidden="true"></i></button>
+          <h2 id="chat-info-title">О чате</h2>
+          <span class="chat-settings-spacer" aria-hidden="true"></span>
+        </header>
+        <form class="chat-info-form" id="chat-info-form">
+          <div class="chat-profile-hero chat-info-hero">
+            <button type="button" class="chat-avatar-edit" data-action="chat-avatar-change" aria-label="Изменить аватарку чата"><span class="chat-user-avatar chat-info-avatar" data-chat-info-avatar aria-hidden="true">С</span><span class="chat-avatar-camera" aria-hidden="true"><i data-lucide="camera"></i></span></button>
+            <div class="chat-profile-name" data-chat-info-name>Семья</div>
+            <div class="chat-profile-login" data-chat-info-summary>6 участников, 2 в сети</div>
+            <div class="chat-avatar-actions"><button type="button" data-action="chat-avatar-change">Изменить фото</button><button type="button" data-action="chat-avatar-remove" hidden>Удалить фото</button></div>
+            <input type="file" id="chat-info-avatar-file" accept="image/*" aria-label="Выбрать аватарку чата" hidden>
+          </div>
+          <div class="chat-settings-group">
+            <div class="chat-settings-card">
+              <label class="chat-settings-field" for="chat-info-name"><span>Название чата</span><input id="chat-info-name" name="chatName" value="Семья" maxlength="60" autocomplete="off" required></label>
+            </div>
+          </div>
+          <button type="submit" class="chat-settings-save" disabled><i data-lucide="check" aria-hidden="true"></i>Сохранить изменения чата</button>
+        </form>
+        <section class="chat-members" aria-labelledby="chat-members-title">
+          <h3 id="chat-members-title">Участники <span class="chat-members-count">6</span></h3>
+          <ul class="chat-settings-card chat-members-list" aria-label="Участники чата"></ul>
+        </section>
+      </section>
+      <section class="chat-auth" id="chat-auth" aria-labelledby="chat-auth-title">
+        <div class="chat-auth-content">
+          <div class="chat-auth-heading"><span class="chat-auth-symbol" aria-hidden="true"><i data-lucide="messages-square"></i></span><h1 id="chat-auth-title">Семья</h1><p>Войдите, чтобы быть на связи</p></div>
+          <form id="chat-auth-form" method="post" novalidate>
+            <div class="chat-settings-card">
+              <div class="chat-settings-field"><label for="chat-auth-login">Логин</label><input id="chat-auth-login" name="username" type="text" placeholder="Ваш логин" maxlength="64" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" aria-describedby="chat-auth-error" required></div>
+              <div class="chat-settings-field"><label for="chat-auth-password">Пароль</label><div class="chat-auth-password-row"><input id="chat-auth-password" name="password" type="password" placeholder="Ваш пароль" maxlength="128" autocomplete="current-password" enterkeyhint="go" aria-describedby="chat-auth-error" required><button type="button" class="chat-icon chat-auth-password-toggle" data-action="auth-password-toggle" aria-label="Показать пароль" aria-pressed="false"><i data-lucide="eye" aria-hidden="true"></i></button></div></div>
+            </div>
+            <p class="chat-auth-error" id="chat-auth-error" role="alert" hidden></p>
+            <button type="submit" class="chat-settings-save chat-auth-submit">Войти</button>
+          </form>
+        </div>
       </section>
       <div class="chat-menu" id="chat-attach-menu" aria-label="Прикрепить медиа" hidden><button type="button" class="cursor-interaction" data-action="add-photo"><i data-lucide="image" aria-hidden="true"></i>Фотография</button><button type="button" class="cursor-interaction" data-action="add-video"><i data-lucide="video" aria-hidden="true"></i>Видео</button></div>
       <div class="chat-dialog" role="dialog" aria-modal="true" aria-label="Просмотр медиа" hidden><div class="chat-dialog-header"><span class="chat-dialog-title">Фото</span><button type="button" class="chat-icon" data-action="media-close" aria-label="Закрыть просмотр"><i data-lucide="x" aria-hidden="true"></i></button></div><div class="chat-dialog-body"><div class="chat-dialog-media"></div><div class="chat-dialog-caption">Наши выходные 🍂</div><div class="chat-dialog-note"></div></div></div>
