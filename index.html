@@ -19,9 +19,9 @@
     // iOS can expose navigator.standalone before its display-mode media query.
     if (navigator.standalone) document.documentElement.dataset.displayMode = 'standalone';
   </script>
-  <link rel="stylesheet" href="./styles.css?v=11">
+  <link rel="stylesheet" href="./styles.css?v=14">
   <script src="./vendor/lucide.min.js" defer></script>
-  <script src="./app.js?v=12" defer></script>
+  <script src="./app.js?v=14" defer></script>
 </head>
 <body>
 <main id="chat-ui">
@@ -112,8 +112,8 @@
       </div>
       <div class="chat-composer" role="group" aria-label="Действия чата" inert>
         <div class="chat-action-item"><button type="button" class="chat-icon chat-action" data-action="attach" aria-label="Файлы: прикрепить фото или видео" aria-expanded="false" aria-controls="chat-attach-menu"><i data-lucide="paperclip" aria-hidden="true"></i></button></div>
-        <div class="chat-message-field"><input class="chat-composer-input" aria-label="Сообщение семье" type="text" maxlength="300" autocomplete="off" placeholder="Сообщение"><button type="button" class="chat-icon chat-inline-send" data-action="inline-send" aria-label="Отправить сообщение" hidden><i data-lucide="arrow-up" aria-hidden="true"></i></button></div>
-        <div class="chat-action-item"><button type="button" class="chat-icon chat-action" data-action="voice-toggle" aria-label="Записать голосовое сообщение" aria-expanded="false" aria-controls="chat-compose-panel"><i data-lucide="mic" aria-hidden="true"></i></button></div>
+        <div class="chat-message-field"><input class="chat-composer-input" aria-label="Сообщение семье" type="text" maxlength="300" autocomplete="off" placeholder="Сообщение"></div>
+        <div class="chat-action-item"><button type="button" class="chat-icon chat-action" data-action="composer-action" data-mode="voice" aria-label="Записать голосовое сообщение" aria-expanded="false" aria-controls="chat-compose-panel"><i data-lucide="mic" aria-hidden="true"></i></button></div>
       </div>
       <section class="chat-chat-picker" id="chat-chat-picker" aria-label="Выбор чата">
         <div class="chat-picker-header">

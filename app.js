@@ -5,8 +5,7 @@
   const input = root.querySelector('.chat-composer-input');
   const mainButton = root.querySelector('[data-action="main"]');
   const attachButton = root.querySelector('[data-action="attach"]');
-  const inlineSend = root.querySelector('[data-action="inline-send"]');
-  const voiceButton = root.querySelector('[data-action="voice-toggle"]');
+  const composerAction = root.querySelector('[data-action="composer-action"]');
   const composePanel = root.querySelector('.chat-compose-panel');
   const searchPanel = root.querySelector('.chat-search');
   const searchInput = root.querySelector('.chat-search-input');
@@ -115,15 +114,37 @@
   let recording = false, recordSeconds = 0, recordTimer = null, voiceTimer = null, voiceElapsed = 0, toastTimer = null;
   let matches = [], activeMatch = 0, mediaTrigger = null;
   const waveHeights = [5,10,18,12,21,14,7,17,11,22,15,8,19,13,6,16,22,12,7,17,10,20,13,8];
-  function icons() { if (globalThis.lucide) lucide.createIcons({attrs:{width:20,height:20}}); }
+  function icons(scope=root) { if (globalThis.lucide) lucide.createIcons({root:scope,attrs:{width:20,height:20}}); }
   function wave(parent) { parent.replaceChildren(...waveHeights.map(height => { const bar = document.createElement('span'); bar.style.height=height+'px'; return bar; })); }
   root.querySelectorAll('.chat-wave').forEach(wave);
   function toast(text) { const box=root.querySelector('.chat-toast'); box.textContent=text; box.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(()=>box.hidden=true,2800); }
   function time(seconds) { return Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0'); }
-  function buttonIcon(button,name,label) { button.innerHTML='<i data-lucide="'+name+'" aria-hidden="true"></i>'; button.setAttribute('aria-label',label); icons(); }
-  function updateComposer() { mainButton.disabled=!recording; mainButton.setAttribute('aria-label','Отправить демо-голосовое'); inlineSend.hidden=recording||!input.value.trim(); input.disabled=recording; }
+  function buttonIcon(button,name,label) { button.innerHTML='<i data-lucide="'+name+'" aria-hidden="true"></i>'; button.setAttribute('aria-label',label); icons(button); }
+  function updateComposer() {
+    const hasText = Boolean(input.value.trim());
+    const sendMode = !recording && hasText;
+    const mode = recording ? 'recording' : sendMode ? 'send' : 'voice';
+    const label = recording ? 'Отменить демо-запись' : sendMode ? 'Отправить сообщение' : 'Записать голосовое сообщение';
+    mainButton.disabled = !recording;
+    mainButton.setAttribute('aria-label', 'Отправить демо-голосовое');
+    input.disabled = recording;
+    if(composerAction.dataset.mode !== mode) buttonIcon(composerAction, sendMode ? 'arrow-up' : 'mic', label);
+    composerAction.dataset.mode = mode;
+    composerAction.setAttribute('aria-label', label);
+    composerAction.classList.toggle('is-send', sendMode);
+    composerAction.classList.toggle('is-recording', recording);
+    if(sendMode) {
+      composerAction.removeAttribute('aria-disabled');
+      composerAction.removeAttribute('aria-expanded');
+      composerAction.removeAttribute('aria-controls');
+    } else {
+      composerAction.removeAttribute('aria-disabled');
+      composerAction.setAttribute('aria-expanded', String(recording));
+      composerAction.setAttribute('aria-controls', 'chat-compose-panel');
+    }
+  }
   function toggleMenu(open) { if(open)document.activeElement?.blur(); menu.hidden=!open; attachButton.setAttribute('aria-expanded',String(open)); }
-  function closeComposer() { if(recording)stopRecording(); composePanel.hidden=true; voiceButton.setAttribute('aria-expanded','false'); }
+  function closeComposer() { if(recording)stopRecording(); composePanel.hidden=true; updateComposer(); }
   function setChatPicker(open,focus=true) {
     if(open) {
       if(!settings.hidden) closeSettings(false);
@@ -319,12 +340,12 @@
     choice.querySelector('.chat-choice-time').textContent = 'Сейчас';
     if(!searchPanel.hidden) renderSearch(); icons(); requestAnimationFrame(scrollToLatest);
   }
-  function stopRecording() { clearInterval(recordTimer); recordTimer=null; recording=false; root.querySelector('.chat-recording').hidden=true; voiceButton.classList.remove('is-recording'); voiceButton.setAttribute('aria-expanded','false'); voiceButton.setAttribute('aria-label','Записать голосовое сообщение'); updateComposer(); }
+  function stopRecording() { clearInterval(recordTimer); recordTimer=null; recording=false; root.querySelector('.chat-recording').hidden=true; updateComposer(); }
   function startRecording() {
     document.activeElement?.blur();
     toggleMenu(false); recording=true; recordSeconds=0; composePanel.hidden=false;
     root.querySelector('.chat-recording').hidden=false; root.querySelector('.chat-record-time').textContent='0:00';
-    voiceButton.setAttribute('aria-expanded','true'); voiceButton.setAttribute('aria-label','Отменить демо-запись'); voiceButton.classList.add('is-recording'); updateComposer();
+    updateComposer();
     recordTimer=setInterval(()=>{ recordSeconds++; root.querySelector('.chat-record-time').textContent=time(recordSeconds); if(recordSeconds>=60){closeComposer();toast('Демо-запись остановлена');}},1000);
   }
   function send() { if(recording){addMessage('voice');closeComposer();toast('Демо: голосовое добавлено без записи звука');return;} const text=input.value.trim(); if(!text)return; addMessage('text',text);input.value='';closeComposer();updateComposer();toast('Демо-сообщение · видно только здесь'); }
@@ -358,10 +379,10 @@
     if(action==='search-open'){toggleSearch(searchPanel.hidden);}
     if(action==='search-close'){toggleSearch(false);}
     if(action==='search-next'||action==='search-prev'){if(matches.length){activeMatch=(activeMatch+(action==='search-next'?1:-1)+matches.length)%matches.length;updateMatch();}}
-    if(action==='main'||action==='inline-send') send();
+    if(action==='main') send();
     if(action==='attach'){const open=menu.hidden; closeComposer(); toggleMenu(open);}
-    if(action==='voice-toggle'){if(recording){closeComposer();voiceButton.focus();}else startRecording();}
-    if(action==='composer-close'){closeComposer();voiceButton.focus();}
+    if(action==='composer-action'){if(composerAction.dataset.mode==='send')send();else if(recording){closeComposer();composerAction.focus();}else startRecording();}
+    if(action==='composer-close'){closeComposer();composerAction.focus();}
     if(action==='add-photo'||action==='add-video'){toggleMenu(false);addMessage(action==='add-photo'?'photo':'video');toast('Пример вложения · файлы не загружаются');}
     if(action==='photo'||action==='video') openMedia(action,button);
     if(action==='media-close') closeMedia();
@@ -372,7 +393,10 @@
     }
   });
   input.addEventListener('input',updateComposer);
-  inlineSend.addEventListener('pointerdown', event => event.preventDefault());
+  composerAction.addEventListener('pointerdown', event => {
+    // Keep focus and the keyboard while tapping Send.
+    if(composerAction.dataset.mode === 'send') event.preventDefault();
+  });
   input.addEventListener('focus',()=>toggleMenu(false));
   input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.isComposing){event.preventDefault();if(input.value.trim())send();}});
   searchInput.addEventListener('input',renderSearch);
