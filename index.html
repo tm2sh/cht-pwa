@@ -19,9 +19,9 @@
     // iOS can expose navigator.standalone before its display-mode media query.
     if (navigator.standalone) document.documentElement.dataset.displayMode = 'standalone';
   </script>
-  <link rel="stylesheet" href="./styles.css?v=17">
+  <link rel="stylesheet" href="./styles.css?v=21">
   <script src="./vendor/lucide.min.js" defer></script>
-  <script src="./app.js?v=17" defer></script>
+  <script src="./app.js?v=24" defer></script>
 </head>
 <body>
 <main id="chat-ui">
@@ -47,8 +47,8 @@
         <div class="chat-message-row chat-dad"><span class="chat-avatar" aria-label="Аватарка папы">П</span><article class="chat-message chat-dad chat-media-message">
           <div class="chat-author"><span class="chat-author-name">Папа</span></div>
           <div class="chat-attachments">
-            <button type="button" class="chat-attachment" data-action="photo" aria-label="Открыть фотографию с прогулки"><div class="chat-scene"><div class="chat-hill"></div><div class="chat-hill chat-hill-second"></div><div class="chat-shore"></div><div class="chat-tree"></div></div></button>
-            <button type="button" class="chat-attachment" data-action="video" aria-label="Открыть видео с прогулки"><div class="chat-scene chat-scene-alt"><div class="chat-hill"></div><div class="chat-hill chat-hill-second"></div><div class="chat-shore"></div><div class="chat-tree"></div></div><span class="chat-video-label"><i data-lucide="play" aria-hidden="true"></i>0:18</span></button>
+            <button type="button" class="chat-attachment" data-action="photo" data-media-src="./media/lake-boat.jpg" data-media-caption="Прогулка по озеру" aria-label="Открыть фотографию с прогулки"><img class="chat-demo-preview" src="./media/lake-boat.jpg" alt="" width="1200" height="800" decoding="async"></button>
+            <button type="button" class="chat-attachment" data-action="video" data-media-src="./media/flowers-5s.mp4" data-media-caption="Цветы на прогулке" aria-label="Открыть видео с прогулки"><img class="chat-demo-preview" src="./media/flowers-poster.jpg" alt="" width="960" height="540" decoding="async"><span class="chat-video-label"><i data-lucide="play" aria-hidden="true"></i>0:05</span></button>
           </div>
           <div class="chat-copy" data-searchable>Да! А вот фото и видео с наших выходных 🍂</div>
           <div class="chat-time">09:34</div>
@@ -59,7 +59,7 @@
         </article></div>
         <div class="chat-message-row chat-gran"><span class="chat-avatar" aria-label="Аватарка бабушки">Б</span><article class="chat-message chat-gran">
           <div class="chat-author"><span class="chat-author-name">Бабушка</span></div>
-          <div class="chat-voice"><button type="button" class="chat-icon chat-play" data-action="voice-play" aria-label="Прослушать пример голосового сообщения" aria-pressed="false"><i data-lucide="play" aria-hidden="true"></i></button><div class="chat-wave-wrap"><div class="chat-wave" aria-hidden="true"></div><div class="chat-duration">0:12</div></div></div>
+          <div class="chat-voice" data-speaker="Бабушки" data-duration="9.471383"><button type="button" class="chat-icon chat-play" data-action="voice-play" aria-label="Прослушать голосовое Бабушки" aria-pressed="false"><i data-lucide="play" aria-hidden="true"></i></button><div class="chat-wave-wrap"><div class="chat-wave" aria-hidden="true"></div><div class="chat-duration">0:10</div></div><audio src="./media/grandma-voice.m4a" preload="metadata" hidden></audio></div>
           <div class="chat-time">09:38</div>
         </article></div>
         <div class="chat-message-row chat-message-group" data-author="mom" role="group" aria-label="Мама, три сообщения подряд">
@@ -94,7 +94,7 @@
         </div>
         <div class="chat-message-row chat-dad"><span class="chat-avatar" aria-label="Аватарка папы">П</span><article class="chat-message chat-dad chat-media-message">
           <div class="chat-author"><span class="chat-author-name">Папа</span></div>
-          <button type="button" class="chat-attachment chat-single-photo" data-action="photo" aria-label="Открыть ещё одну фотографию с прогулки"><div class="chat-scene chat-scene-alt"><div class="chat-hill"></div><div class="chat-hill chat-hill-second"></div><div class="chat-shore"></div><div class="chat-tree"></div></div></button>
+          <button type="button" class="chat-attachment chat-single-photo" data-action="photo" data-media-src="./media/lake-shore.jpg" data-media-caption="Солнечный день у озера" aria-label="Открыть ещё одну фотографию с прогулки"><img class="chat-demo-preview" src="./media/lake-shore.jpg" alt="" width="1200" height="800" decoding="async"></button>
           <div class="chat-copy" data-searchable>Ещё один кадр нашёл. Такой свет был у озера!</div>
           <div class="chat-time">09:45</div>
         </article></div>
@@ -107,11 +107,11 @@
       </div>
       <div class="chat-compose-panel" id="chat-compose-panel" role="group" aria-label="Запись голосового" hidden>
         <button type="button" class="chat-icon" data-action="composer-close" aria-label="Отменить запись"><i data-lucide="x" aria-hidden="true"></i></button>
-        <div class="chat-recording" hidden><span class="chat-record-dot"></span><div class="chat-record-copy"><strong class="chat-record-time">0:00</strong><span>Демо голосового</span></div></div>
+        <div class="chat-recording" hidden><span class="chat-record-dot"></span><div class="chat-record-copy"><strong class="chat-record-time">0:00</strong><span>Запись голосового</span></div></div>
         <button type="button" class="chat-icon chat-panel-send" data-action="main" aria-label="Отправить сообщение" disabled><i data-lucide="arrow-up" aria-hidden="true"></i></button>
       </div>
       <div class="chat-composer" role="group" aria-label="Действия чата" inert>
-        <div class="chat-action-item"><button type="button" class="chat-icon chat-action" data-action="attach" aria-label="Файлы: прикрепить фото или видео" aria-expanded="false" aria-controls="chat-attach-menu"><i data-lucide="paperclip" aria-hidden="true"></i></button></div>
+        <div class="chat-action-item"><button type="button" class="chat-icon chat-action" data-action="attach" aria-label="Файлы: прикрепить фото или видео"><i data-lucide="paperclip" aria-hidden="true"></i></button><input type="file" id="chat-media-file" accept="image/*,video/*" multiple aria-label="Выбрать фото или видео" hidden></div>
         <div class="chat-message-field"><input class="chat-composer-input" aria-label="Сообщение семье" type="text" maxlength="300" autocomplete="off" placeholder="Сообщение"></div>
         <div class="chat-action-item"><button type="button" class="chat-icon chat-action" data-action="composer-action" data-mode="voice" aria-label="Записать голосовое сообщение" aria-expanded="false" aria-controls="chat-compose-panel"><i data-lucide="mic" aria-hidden="true"></i></button></div>
       </div>
@@ -203,7 +203,6 @@
           </form>
         </div>
       </section>
-      <div class="chat-menu" id="chat-attach-menu" aria-label="Прикрепить медиа" hidden><button type="button" class="cursor-interaction" data-action="add-photo"><i data-lucide="image" aria-hidden="true"></i>Фотография</button><button type="button" class="cursor-interaction" data-action="add-video"><i data-lucide="video" aria-hidden="true"></i>Видео</button></div>
       <div class="chat-dialog" role="dialog" aria-modal="true" aria-label="Просмотр медиа" hidden><div class="chat-dialog-header"><span class="chat-dialog-title">Фото</span><button type="button" class="chat-icon" data-action="media-close" aria-label="Закрыть просмотр"><i data-lucide="x" aria-hidden="true"></i></button></div><div class="chat-dialog-body"><div class="chat-dialog-media"></div><div class="chat-dialog-caption">Наши выходные 🍂</div><div class="chat-dialog-note"></div></div></div>
       <div class="chat-toast" role="status" aria-live="polite" hidden></div>
     </article>
@@ -230,14 +229,14 @@
   <div class="chat-message-row chat-friend-lena"><span class="chat-avatar" aria-label="Аватарка Лены">Л</span><article class="chat-message chat-media-message">
     <div class="chat-author"><span class="chat-author-name">Лена</span></div>
     <div class="chat-attachments">
-      <button type="button" class="chat-attachment" data-action="photo" aria-label="Открыть фотографию озера"><div class="chat-scene"><div class="chat-hill"></div><div class="chat-hill chat-hill-second"></div><div class="chat-shore"></div><div class="chat-tree"></div></div></button>
-      <button type="button" class="chat-attachment" data-action="video" aria-label="Открыть видео у озера"><div class="chat-scene chat-scene-alt"><div class="chat-hill"></div><div class="chat-hill chat-hill-second"></div><div class="chat-shore"></div><div class="chat-tree"></div></div><span class="chat-video-label"><i data-lucide="play" aria-hidden="true"></i>0:18</span></button>
+      <button type="button" class="chat-attachment" data-action="photo" data-media-src="./media/lake-shore.jpg" data-media-caption="Нашли красивое место у озера" aria-label="Открыть фотографию озера"><img class="chat-demo-preview" src="./media/lake-shore.jpg" alt="" width="1200" height="800" decoding="async"></button>
+      <button type="button" class="chat-attachment" data-action="video" data-media-src="./media/flowers-5s.mp4" data-media-caption="Цветы у тропинки" aria-label="Открыть видео с цветами"><img class="chat-demo-preview" src="./media/flowers-poster.jpg" alt="" width="960" height="540" decoding="async"><span class="chat-video-label"><i data-lucide="play" aria-hidden="true"></i>0:05</span></button>
     </div>
     <div class="chat-copy" data-searchable>Вот то место, о котором рассказывала. Там есть дорожка вдоль воды 📷</div><div class="chat-time">11:10</div>
   </article></div>
   <div class="chat-message-row chat-friend-max"><span class="chat-avatar" aria-label="Аватарка Макса">М</span><article class="chat-message">
     <div class="chat-author"><span class="chat-author-name">Макс</span></div>
-    <div class="chat-voice"><button type="button" class="chat-icon chat-play" data-action="voice-play" aria-label="Прослушать пример голосового сообщения" aria-pressed="false"><i data-lucide="play" aria-hidden="true"></i></button><div class="chat-wave-wrap"><div class="chat-wave" aria-hidden="true"></div><div class="chat-duration">0:12</div></div></div>
+    <div class="chat-voice" data-speaker="Макса" data-duration="9.783356"><button type="button" class="chat-icon chat-play" data-action="voice-play" aria-label="Прослушать голосовое Макса" aria-pressed="false"><i data-lucide="play" aria-hidden="true"></i></button><div class="chat-wave-wrap"><div class="chat-wave" aria-hidden="true"></div><div class="chat-duration">0:10</div></div><audio src="./media/max-voice.m4a" preload="metadata" hidden></audio></div>
     <div class="chat-time">11:12</div>
   </article></div>
   <div class="chat-message-row chat-own"><article class="chat-message chat-own" aria-label="Ваше сообщение">

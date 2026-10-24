@@ -4,13 +4,12 @@
   const history = root.querySelector('.chat-history');
   const input = root.querySelector('.chat-composer-input');
   const mainButton = root.querySelector('[data-action="main"]');
-  const attachButton = root.querySelector('[data-action="attach"]');
+  const mediaFile = root.querySelector('#chat-media-file');
   const composerAction = root.querySelector('[data-action="composer-action"]');
   const composePanel = root.querySelector('.chat-compose-panel');
   const searchPanel = root.querySelector('.chat-search');
   const searchInput = root.querySelector('.chat-search-input');
   const count = root.querySelector('.chat-search-count');
-  const menu = root.querySelector('.chat-menu');
   const dialog = root.querySelector('.chat-dialog');
   const chatPicker = root.querySelector('.chat-chat-picker');
   const backButton = root.querySelector('[data-action="chats-back"]');
@@ -36,6 +35,8 @@
   // Demo-only sign-in; a real account service is not connected.
   const demoCredentials = {login:'admin', password:'admin'};
   let authenticated = false;
+  let mediaSession = 0, attachmentChat = 'family';
+  const localMedia = new WeakMap();
   // Profile edits are local to this demo page; passwords are never retained.
   const profile = {name:'Тимур', login:'admin', avatar:''};
   let draftAvatar = '', avatarRequest = 0;
@@ -53,7 +54,7 @@
       ],
     },
     friends: {
-      name:'Друзья', photo:'', members:'4 участника, 2 в сети', nodes:[...document.getElementById('chat-friends-history').content.cloneNode(true).childNodes], draft:'',
+      name:'Друзья', photo:'', members:'4 участника, 2 в сети', nodes:[...document.importNode(document.getElementById('chat-friends-history').content,true).childNodes], draft:'',
       people:[
         {self:true, online:true},
         {name:'Аня', online:true, color:'linear-gradient(145deg, #b5a6e9, #8d7aca)'},
@@ -155,7 +156,9 @@
   standalone.addEventListener('change', updateDisplayMode);
   updateDisplayMode();
   updateViewport();
-  let recording = false, recordSeconds = 0, recordTimer = null, voiceTimer = null, voiceElapsed = 0, toastTimer = null;
+  let recording = false, recordSeconds = 0, recordTimer = null, toastTimer = null;
+  let playingVoice = null;
+  let recordSession = null, recordRequest = 0;
   let matches = [], activeMatch = 0, mediaTrigger = null;
   const waveHeights = [5,10,18,12,21,14,7,17,11,22,15,8,19,13,6,16,22,12,7,17,10,20,13,8];
   function icons(scope=root) { if (globalThis.lucide) lucide.createIcons({root:scope,attrs:{width:20,height:20}}); }
@@ -168,9 +171,9 @@
     const hasText = Boolean(input.value.trim());
     const sendMode = !recording && hasText;
     const mode = recording ? 'recording' : sendMode ? 'send' : 'voice';
-    const label = recording ? 'Отменить демо-запись' : sendMode ? 'Отправить сообщение' : 'Записать голосовое сообщение';
-    mainButton.disabled = !recording;
-    mainButton.setAttribute('aria-label', 'Отправить демо-голосовое');
+    const label = recording ? recordSession ? 'Отменить запись' : 'Отменить запрос микрофона' : sendMode ? 'Отправить сообщение' : 'Записать голосовое сообщение';
+    mainButton.disabled = !recording || !recordSession || recordSession.stopping;
+    mainButton.setAttribute('aria-label', 'Отправить голосовое сообщение');
     input.disabled = recording;
     if(composerAction.dataset.mode !== mode) buttonIcon(composerAction, sendMode ? 'arrow-up' : 'mic', label);
     composerAction.dataset.mode = mode;
@@ -187,7 +190,6 @@
       composerAction.setAttribute('aria-controls', 'chat-compose-panel');
     }
   }
-  function toggleMenu(open) { if(open)document.activeElement?.blur(); menu.hidden=!open; attachButton.setAttribute('aria-expanded',String(open)); }
   function closeComposer() { if(recording)stopRecording(); composePanel.hidden=true; updateComposer(); }
   function setChatPicker(open,focus=true) {
     if(!authenticated) return;
@@ -198,7 +200,7 @@
     }
     if(open && !dialog.hidden) closeMedia();
     if(open && !searchPanel.hidden) toggleSearch(false);
-    if(open) { document.activeElement?.blur(); toggleMenu(false); closeComposer(); if(voiceTimer)stopVoice(); clearTimeout(toastTimer); root.querySelector('.chat-toast').hidden=true; }
+    if(open) { document.activeElement?.blur(); closeComposer(); if(playingVoice)stopVoice(); clearTimeout(toastTimer); root.querySelector('.chat-toast').hidden=true; }
     chatPicker.hidden=!open;
     const title = open ? 'Чаты' : chats[activeChat].name;
     document.title = title+' — PWA-макет';
@@ -225,15 +227,15 @@
     buttonIcon(authPasswordToggle, 'eye', 'Показать пароль');
   }
   function showLogin() {
+    mediaSession++;
     document.activeElement?.blur();
     if(!chatInfo.hidden) closeChatInfo(false);
     if(!settings.hidden) closeSettings(false);
     if(!dialog.hidden) closeMedia();
     if(!searchPanel.hidden) toggleSearch(false);
     document.activeElement?.blur();
-    toggleMenu(false);
     closeComposer();
-    if(voiceTimer) stopVoice();
+    if(playingVoice) stopVoice();
     clearTimeout(toastTimer);
     root.querySelector('.chat-toast').hidden = true;
     authenticated = false;
@@ -454,9 +456,8 @@
   }
   function openChatInfo() {
     document.activeElement?.blur();
-    toggleMenu(false);
     closeComposer();
-    if(voiceTimer) stopVoice();
+    if(playingVoice) stopVoice();
     if(!searchPanel.hidden) toggleSearch(false);
     clearTimeout(toastTimer);
     root.querySelector('.chat-toast').hidden = true;
@@ -530,9 +531,8 @@
     const next = chats[chatId];
     if(!next) return;
     document.activeElement?.blur();
-    toggleMenu(false);
     closeComposer();
-    if(voiceTimer) stopVoice();
+    if(playingVoice) stopVoice();
     if(!searchPanel.hidden) toggleSearch(false);
     if(chatId !== activeChat) {
       chats[activeChat].nodes = [...history.childNodes];
@@ -544,6 +544,7 @@
       updateComposer();
       icons();
     }
+    history.querySelectorAll('.chat-voice audio').forEach(audio=>{ if(!audio.currentSrc) audio.load(); });
     updateChatAppearance(chatId);
     setChatPicker(false);
     requestAnimationFrame(scrollToLatest);
@@ -567,45 +568,276 @@
   }
   function updateMatch() { matches.forEach((message,index)=>message.classList.toggle('chat-search-current',index===activeMatch)); count.textContent=matches.length?String(activeMatch+1)+' из '+matches.length+' сообщений':'Ничего не найдено'; if(matches.length){const box=matches[activeMatch].getBoundingClientRect();const frame=history.getBoundingClientRect();const style=getComputedStyle(history);const top=parseFloat(style.paddingTop);const bottom=parseFloat(style.paddingBottom);history.scrollTop+=box.top-frame.top-top-(history.clientHeight-top-bottom-box.height)/2;} }
   function toggleSearch(open) { searchPanel.hidden=!open; root.querySelector('[data-action="search-open"]').setAttribute('aria-expanded',String(open)); if(open) searchInput.focus({preventScroll:true}); else { searchInput.blur(); searchInput.value=''; renderSearch(); root.querySelector('[data-action="search-open"]').focus({preventScroll:true}); } }
-  function addMessage(kind,text='') {
-    const host=root.querySelector('.chat-new-message'); host.hidden=false;
+  function addMessage(kind,text='',attachment=null,chatId=activeChat) {
+    const host=chatId===activeChat ? history.querySelector('.chat-new-message') : chats[chatId].nodes.find(node=>node.classList?.contains('chat-new-message'));
+    host.hidden=false;
     const row=document.createElement('div'); row.className='chat-message-row chat-own';
     row.innerHTML='<article class="chat-message chat-own" aria-label="Ваше сообщение"><div class="chat-message-content"></div><div class="chat-time">Сейчас<i data-lucide="check" aria-label="Отправлено в макете"></i></div></article>';
     host.append(row); host.style.display='flex'; host.style.flexDirection='column';host.style.gap='4px';
     const content=row.querySelector('.chat-message-content');
     if(kind==='text') { const copy=document.createElement('div'); copy.className='chat-copy'; copy.dataset.searchable=''; copy.textContent=text; content.append(copy); }
     if(kind==='photo'||kind==='video') {
-      const sample=root.querySelector(kind==='photo'?'[data-action="photo"]':'[data-action="video"]').cloneNode(true);
-      sample.style.width='180px'; content.append(sample);
+      const preview=document.createElement('button');
+      preview.type='button';
+      preview.className='chat-attachment chat-local-attachment';
+      preview.dataset.action='media-open';
+      preview.setAttribute('aria-label',(kind==='photo'?'Открыть фотографию: ':'Открыть видео: ')+attachment.name);
+      const media=document.createElement(kind==='photo'?'img':'video');
+      if(kind==='photo') media.alt='';
+      else { media.muted=true; media.playsInline=true; media.preload='metadata'; }
+      media.setAttribute('aria-hidden','true');
+      media.src=attachment.url;
+      preview.append(media);
+      if(kind==='video') {
+        const badge=document.createElement('span');
+        badge.className='chat-video-label';
+        badge.innerHTML='<i data-lucide="play" aria-hidden="true"></i>';
+        badge.append(document.createTextNode(time(Math.round(attachment.duration))));
+        preview.append(badge);
+      }
+      localMedia.set(preview,attachment);
+      content.append(preview);
     }
     if(kind==='voice') {
-      const voice=document.createElement('div'); voice.className='chat-copy'; voice.dataset.searchable=''; voice.textContent='🎙 Голосовое сообщение · '+time(Math.max(1,recordSeconds)); content.append(voice);
+      const voice=document.createElement('div');
+      voice.className='chat-voice';
+      voice.dataset.duration=String(attachment.duration);
+      voice.innerHTML='<button type="button" class="chat-icon chat-play" data-action="voice-play" aria-label="Прослушать своё голосовое сообщение" aria-pressed="false"><i data-lucide="play" aria-hidden="true"></i></button><div class="chat-wave-wrap"><div class="chat-wave" aria-hidden="true"></div><div class="chat-duration"></div></div>';
+      wave(voice.querySelector('.chat-wave'));
+      voice.querySelector('.chat-duration').textContent=time(Math.ceil(attachment.duration));
+      const audio=document.createElement('audio');
+      audio.preload='metadata'; audio.hidden=true; audio.src=attachment.url;
+      voice.append(audio);
+      configureVoiceAudio(voice,audio);
+      content.append(voice);
     }
-    const choice = chatPicker.querySelector('[data-chat="'+activeChat+'"]');
+    const choice = chatPicker.querySelector('[data-chat="'+chatId+'"]');
     choice.querySelector('.chat-choice-preview').textContent = 'Вы: '+(kind==='text'?text:kind==='photo'?'Фотография':kind==='video'?'Видео':'Голосовое сообщение');
     choice.querySelector('.chat-choice-time').textContent = 'Сейчас';
-    if(!searchPanel.hidden) renderSearch(); icons(); requestAnimationFrame(scrollToLatest);
+    icons(row);
+    if(chatId===activeChat) {
+      if(!searchPanel.hidden) renderSearch();
+      requestAnimationFrame(scrollToLatest);
+    }
   }
-  function stopRecording() { clearInterval(recordTimer); recordTimer=null; recording=false; root.querySelector('.chat-recording').hidden=true; updateComposer(); }
-  function startRecording() {
-    document.activeElement?.blur();
-    toggleMenu(false); recording=true; recordSeconds=0; composePanel.hidden=false;
-    root.querySelector('.chat-recording').hidden=false; root.querySelector('.chat-record-time').textContent='0:00';
+  function readAttachment(file) {
+    const kind=file.type.startsWith('image/') ? 'photo' : file.type.startsWith('video/') ? 'video' :
+      /\.(jpe?g|png|gif|webp|avif|heic|heif|bmp|svg)$/i.test(file.name) ? 'photo' : /\.(mp4|m4v|mov|webm|ogv|3gp)$/i.test(file.name) ? 'video' : '';
+    if(!kind) return Promise.resolve({error:'Выберите фотографию или видео.'});
+    const url=URL.createObjectURL(file);
+    return new Promise(resolve=>{
+      const media=kind==='photo' ? new Image() : document.createElement('video');
+      const finish=success=>{
+        const duration=Number.isFinite(media.duration) ? media.duration : 0;
+        media.onload=null; media.onloadedmetadata=null; media.onerror=null;
+        if(kind==='video') { media.removeAttribute('src'); media.load(); }
+        if(success) resolve({kind,url,name:file.name,duration});
+        else {
+          URL.revokeObjectURL(url);
+          resolve({error:kind==='photo'?'Не удалось открыть выбранное фото. Попробуйте другое изображение.':'Не удалось открыть выбранное видео. Попробуйте другой файл.'});
+        }
+      };
+      if(kind==='photo') media.onload=()=>finish(true);
+      else { media.preload='metadata'; media.muted=true; media.playsInline=true; media.onloadedmetadata=()=>finish(true); }
+      media.onerror=()=>finish(false);
+      media.src=url;
+    });
+  }
+  mediaFile.addEventListener('change',async()=>{
+    const files=[...mediaFile.files], chatId=attachmentChat, session=mediaSession;
+    mediaFile.value='';
+    if(!files.length || !authenticated) return;
+    const attachments=await Promise.all(files.map(readAttachment));
+    if(!authenticated || session!==mediaSession) {
+      attachments.forEach(attachment=>{ if(attachment.url) URL.revokeObjectURL(attachment.url); });
+      return;
+    }
+    attachments.filter(attachment=>!attachment.error).forEach(attachment=>addMessage(attachment.kind,'',attachment,chatId));
+    const error=attachments.find(attachment=>attachment.error);
+    if(error) toast(error.error);
+    else toast(files.length===1?'Вложение добавлено в макет':'Вложения добавлены в макет');
+  });
+  function resetRecordingUi() {
+    clearInterval(recordTimer); recordTimer=null; recordSession=null; recording=false;
+    root.querySelector('.chat-recording').hidden=true;
+    composePanel.hidden=true;
     updateComposer();
-    recordTimer=setInterval(()=>{ recordSeconds++; root.querySelector('.chat-record-time').textContent=time(recordSeconds); if(recordSeconds>=60){closeComposer();toast('Демо-запись остановлена');}},1000);
   }
-  function send() { if(recording){addMessage('voice');closeComposer();toast('Демо: голосовое добавлено без записи звука');return;} const text=input.value.trim(); if(!text)return; addMessage('text',text);input.value='';closeComposer();updateComposer();toast('Демо-сообщение · видно только здесь'); }
-  function stopVoice() { clearInterval(voiceTimer); voiceTimer=null; voiceElapsed=0; const button=root.querySelector('[data-action="voice-play"]'); button.setAttribute('aria-pressed','false'); buttonIcon(button,'play','Прослушать пример голосового сообщения'); root.querySelector('.chat-duration').textContent='0:12'; root.querySelectorAll('.chat-wave span').forEach(bar=>bar.dataset.active='false'); }
+  function stopRecording() {
+    recordRequest++;
+    const session=recordSession;
+    if(session) session.cancelled=true;
+    resetRecordingUi();
+    if(session) {
+      if(session.recorder.state!=='inactive') { try { session.recorder.stop(); } catch {} }
+      session.stream.getTracks().forEach(track=>track.stop());
+    }
+  }
+  function microphoneError(error) {
+    if(error.name==='NotAllowedError' || error.name==='SecurityError') return 'Доступ к микрофону запрещён. Разрешите его в настройках браузера и попробуйте снова.';
+    if(error.name==='NotFoundError') return 'Микрофон не найден. Подключите его и попробуйте снова.';
+    if(error.name==='NotReadableError') return 'Не удалось включить микрофон. Возможно, он занят другим приложением.';
+    return 'Не удалось начать запись. Попробуйте ещё раз.';
+  }
+  async function startRecording() {
+    if(recording) return;
+    if(!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) { toast('Для записи микрофона откройте приложение по HTTPS или на localhost.'); return; }
+    if(!window.MediaRecorder) { toast('Этот браузер не поддерживает запись голосовых. Попробуйте обновить его.'); return; }
+    document.activeElement?.blur(); stopVoice();
+    const request=++recordRequest, chatId=activeChat, sessionId=mediaSession;
+    recording=true; recordSeconds=0; composePanel.hidden=false;
+    root.querySelector('.chat-recording').hidden=false;
+    root.querySelector('.chat-record-time').textContent='0:00';
+    root.querySelector('.chat-record-copy span').textContent='Доступ к микрофону…';
+    updateComposer();
+    let stream;
+    try {
+      // This is deliberately called only from the user's Record button.
+      stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      if(request!==recordRequest || !authenticated || activeChat!==chatId || mediaSession!==sessionId || document.hidden) {
+        stream.getTracks().forEach(track=>track.stop());
+        if(request===recordRequest) stopRecording();
+        return;
+      }
+      const mimeType=['audio/mp4;codecs=mp4a.40.2','audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus'].find(type=>MediaRecorder.isTypeSupported(type));
+      const recorder=new MediaRecorder(stream,mimeType?{mimeType}:undefined);
+      const session={recorder,stream,chunks:[],chatId,sessionId,startedAt:performance.now(),duration:0,stopping:false,cancelled:false,limit:false};
+      recordSession=session;
+      recorder.addEventListener('dataavailable',event=>{ if(event.data.size && !session.cancelled) session.chunks.push(event.data); });
+      recorder.addEventListener('error',()=>{
+        if(recordSession!==session) return;
+        stopRecording(); toast('Запись прервана. Попробуйте записать голосовое ещё раз.');
+      });
+      recorder.addEventListener('stop',()=>{
+        session.stream.getTracks().forEach(track=>track.stop());
+        if(session.cancelled || recordSession!==session) return;
+        resetRecordingUi();
+        if(!authenticated || session.sessionId!==mediaSession) return;
+        const blob=new Blob(session.chunks,{type:recorder.mimeType || session.chunks[0]?.type || 'audio/webm'});
+        if(!blob.size || session.duration<0.1) { toast('Запись слишком короткая. Попробуйте ещё раз.'); return; }
+        addMessage('voice','',{url:URL.createObjectURL(blob),duration:session.duration},session.chatId);
+        toast(session.limit?'Голосовое добавлено · достигнут лимит 1 минуты':'Голосовое добавлено в макет');
+      });
+      stream.getAudioTracks().forEach(track=>track.addEventListener('ended',()=>{
+        if(recordSession===session && !session.stopping) { stopRecording(); toast('Микрофон отключён. Запись отменена.'); }
+      }));
+      recorder.start(1000);
+      session.startedAt=performance.now();
+      root.querySelector('.chat-record-copy span').textContent='Идёт запись';
+      updateComposer();
+      recordTimer=setInterval(()=>{
+        const elapsed=(performance.now()-session.startedAt)/1000;
+        recordSeconds=Math.min(60,Math.floor(elapsed));
+        root.querySelector('.chat-record-time').textContent=time(recordSeconds);
+        if(elapsed>=60) { session.limit=true; finishRecording(); }
+      },250);
+    } catch(error) {
+      stream?.getTracks().forEach(track=>track.stop());
+      if(request!==recordRequest) return;
+      stopRecording(); toast(microphoneError(error));
+    }
+  }
+  function finishRecording() {
+    const session=recordSession;
+    if(!session || session.stopping || session.recorder.state!=='recording') return;
+    session.duration=Math.min(60,(performance.now()-session.startedAt)/1000);
+    session.stopping=true;
+    clearInterval(recordTimer); recordTimer=null;
+    root.querySelector('.chat-record-copy span').textContent='Сохраняем…';
+    updateComposer();
+    try { session.recorder.stop(); }
+    catch { stopRecording(); toast('Не удалось сохранить запись. Попробуйте ещё раз.'); }
+  }
+  function send() { if(recording){finishRecording();return;} const text=input.value.trim(); if(!text)return; addMessage('text',text);input.value='';closeComposer();updateComposer();toast('Демо-сообщение · видно только здесь'); }
+  function voiceDuration(voice) {
+    const audio=voice.querySelector('audio');
+    return audio && Number.isFinite(audio.duration) && audio.duration>0 ? audio.duration : Number(voice.dataset.duration)||12;
+  }
+  function paintVoice(voice,elapsed=0) {
+    const duration=voiceDuration(voice);
+    const current=Math.max(0,Math.min(elapsed,duration));
+    voice.querySelector('.chat-duration').textContent=current>0?time(Math.floor(current))+' / '+time(Math.ceil(duration)):time(Math.ceil(duration));
+    voice.querySelectorAll('.chat-wave span').forEach((bar,index)=>bar.dataset.active=String(index<waveHeights.length*current/duration));
+  }
+  function setVoiceButton(voice,playing) {
+    const own=!!voice.closest('.chat-own'), button=voice.querySelector('[data-action="voice-play"]');
+    const label=own?'своё голосовое сообщение':'голосовое '+(voice.dataset.speaker||'сообщение');
+    button.setAttribute('aria-pressed',String(playing));
+    buttonIcon(button,playing?'pause':'play',(playing?'Приостановить ':'Прослушать ')+label);
+  }
+  function configureVoiceAudio(voice,audio) {
+    audio.addEventListener('loadedmetadata',()=>{
+      if(Number.isFinite(audio.duration) && audio.duration>0) voice.dataset.duration=String(audio.duration);
+      paintVoice(voice,audio.currentTime);
+    });
+    audio.addEventListener('timeupdate',()=>paintVoice(voice,audio.currentTime));
+    audio.addEventListener('ended',()=>{
+      if(playingVoice===voice) stopVoice();
+      else { audio.currentTime=0; setVoiceButton(voice,false); paintVoice(voice); }
+    });
+    audio.addEventListener('pause',()=>{ if(playingVoice===voice && !audio.ended) stopVoice(false); });
+    audio.addEventListener('error',()=>{
+      if(playingVoice===voice) stopVoice();
+      toast('Не удалось воспроизвести голосовое сообщение в этом браузере.');
+    });
+    paintVoice(voice,audio.currentTime);
+    // Audio cloned from an inert template needs explicit resource selection.
+    audio.load();
+  }
+  function stopVoice(reset=true) {
+    if(!playingVoice) return;
+    const voice=playingVoice, audio=voice.querySelector('audio');
+    playingVoice=null;
+    if(audio) { audio.pause(); if(reset && audio.readyState>0) audio.currentTime=0; }
+    setVoiceButton(voice,false);
+    paintVoice(voice,!reset && audio?audio.currentTime:0);
+  }
+  function playVoice(button) {
+    if(recording) { toast('Сначала отправьте или отмените запись.'); return; }
+    const voice=button.closest('.chat-voice'), wasPlaying=voice===playingVoice;
+    stopVoice(!wasPlaying);
+    if(wasPlaying) return;
+    playingVoice=voice;
+    setVoiceButton(voice,true);
+    const audio=voice.querySelector('audio');
+    if(audio) {
+      audio.play().catch(()=>{
+        if(playingVoice===voice) { stopVoice(false); toast('Не удалось начать воспроизведение. Нажмите Play ещё раз.'); }
+      });
+      return;
+    }
+    stopVoice();
+    toast('Аудиозапись недоступна. Попробуйте обновить страницу.');
+  }
   function openMedia(kind,button) {
     document.activeElement?.blur();
-    mediaTrigger=button; const scene=root.querySelector(kind==='photo'?'[data-action="photo"] .chat-scene':'[data-action="video"] .chat-scene').cloneNode(true);
-    root.querySelector('.chat-dialog-media').replaceChildren(scene);
-    root.querySelector('.chat-dialog-title').textContent=kind==='photo'?'Фотография':'Видео · 0:18';
-    root.querySelector('.chat-dialog-caption').textContent=activeChat==='friends'?'Прогулка с друзьями 🌿':'Наши выходные 🍂';
-    root.querySelector('.chat-dialog-note').textContent=kind==='photo'?'Иллюстрация для примера интерфейса':'Пример экрана просмотра · без видеозаписи';
+    closeComposer(); stopVoice();
+    mediaTrigger=button;
+    const attachment=localMedia.get(button) || {kind,url:button.dataset.mediaSrc,name:button.dataset.mediaCaption};
+    const note=dialog.querySelector('.chat-dialog-note');
+    const media=document.createElement(attachment.kind==='photo'?'img':'video');
+    media.className='chat-local-full';
+    if(attachment.kind==='photo') media.alt=attachment.name;
+    else {
+      media.controls=true; media.playsInline=true; media.preload='metadata';
+      const poster=button.querySelector('img');
+      if(poster) media.poster=poster.src;
+    }
+    media.addEventListener('error',()=>{ if(!dialog.contains(media)) return; note.hidden=false; note.textContent=attachment.kind==='photo'?'Не удалось открыть фото.':'Не удалось воспроизвести видео. Возможно, его формат не поддерживается этим браузером.'; });
+    media.src=attachment.url;
+    dialog.querySelector('.chat-dialog-media').replaceChildren(media);
+    dialog.querySelector('.chat-dialog-title').textContent=attachment.kind==='photo'?'Фотография':'Видео';
+    dialog.querySelector('.chat-dialog-caption').textContent=attachment.name;
+    note.textContent=''; note.hidden=true;
     [...app.children].forEach(child=>{ if(child!==dialog) child.inert=true; }); dialog.hidden=false; dialog.querySelector('button').focus();
   }
-  function closeMedia() { dialog.hidden=true; [...app.children].forEach(child=>child.inert=false); mediaTrigger?.focus(); }
+  function closeMedia() {
+    const video=dialog.querySelector('video');
+    if(video) { video.pause(); video.removeAttribute('src'); video.load(); }
+    dialog.querySelector('.chat-dialog-media').replaceChildren();
+    dialog.hidden=true; [...app.children].forEach(child=>child.inert=false);
+    mediaTrigger?.focus({preventScroll:true}); mediaTrigger=null;
+  }
   root.addEventListener('click',event=> {
     const button=event.target.closest('button[data-action]'); if(!button) return;
     const action=button.dataset.action;
@@ -632,31 +864,35 @@
     if(action==='search-close'){toggleSearch(false);}
     if(action==='search-next'||action==='search-prev'){if(matches.length){activeMatch=(activeMatch+(action==='search-next'?1:-1)+matches.length)%matches.length;updateMatch();}}
     if(action==='main') send();
-    if(action==='attach'){const open=menu.hidden; closeComposer(); toggleMenu(open);}
+    if(action==='attach'){document.activeElement?.blur();closeComposer();attachmentChat=activeChat;mediaFile.value='';mediaFile.click();}
     if(action==='composer-action'){if(composerAction.dataset.mode==='send')send();else if(recording){closeComposer();composerAction.focus();}else startRecording();}
     if(action==='composer-close'){closeComposer();composerAction.focus();}
-    if(action==='add-photo'||action==='add-video'){toggleMenu(false);addMessage(action==='add-photo'?'photo':'video');toast('Пример вложения · файлы не загружаются');}
+    if(action==='media-open') openMedia('',button);
     if(action==='photo'||action==='video') openMedia(action,button);
     if(action==='media-close') closeMedia();
-    if(action==='voice-play') {
-      if(voiceTimer){stopVoice();return;}
-      button.setAttribute('aria-pressed','true');buttonIcon(button,'pause','Остановить пример голосового');toast('Демонстрация плеера · без звука');
-      voiceTimer=setInterval(()=>{voiceElapsed++;root.querySelector('.chat-duration').textContent=time(voiceElapsed)+' / 0:12';root.querySelectorAll('.chat-wave span').forEach((bar,index)=>bar.dataset.active=String(index<waveHeights.length*voiceElapsed/12));if(voiceElapsed>=12)stopVoice();},1000);
-    }
+    if(action==='voice-play') playVoice(button);
   });
   input.addEventListener('input',updateComposer);
   composerAction.addEventListener('pointerdown', event => {
     // Keep focus and the keyboard while tapping Send.
     if(composerAction.dataset.mode === 'send') event.preventDefault();
   });
-  input.addEventListener('focus',()=>toggleMenu(false));
   input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.isComposing){event.preventDefault();if(input.value.trim())send();}});
   searchInput.addEventListener('input',renderSearch);
   searchInput.addEventListener('keydown',event=>{if(event.key==='Enter'&&matches.length){event.preventDefault();activeMatch=(activeMatch+(event.shiftKey?-1:1)+matches.length)%matches.length;updateMatch();}});
-  document.addEventListener('keydown',event=>{if(!authenticated)return;if(event.key==='Escape'){if(!chatInfo.hidden)closeChatInfo();else if(!settings.hidden)closeSettings();else if(!chatPicker.hidden){setChatPicker(false);}else if(!dialog.hidden)closeMedia();else if(!menu.hidden)toggleMenu(false);else if(!composePanel.hidden)closeComposer();else if(!searchPanel.hidden)toggleSearch(false);}if(!dialog.hidden&&event.key==='Tab'){event.preventDefault();dialog.querySelector('button').focus();}});
+  document.addEventListener('keydown',event=>{if(!authenticated)return;if(event.key==='Escape'){if(!chatInfo.hidden)closeChatInfo();else if(!settings.hidden)closeSettings();else if(!chatPicker.hidden){setChatPicker(false);}else if(!dialog.hidden)closeMedia();else if(!composePanel.hidden)closeComposer();else if(!searchPanel.hidden)toggleSearch(false);}if(!dialog.hidden&&event.key==='Tab'){const controls=[...dialog.querySelectorAll('button, video[controls]')];const index=controls.indexOf(document.activeElement);if(event.shiftKey?index<=0:index<0||index===controls.length-1){event.preventDefault();controls[event.shiftKey?controls.length-1:0].focus();}}});
   function renderDesign() { app.style.setProperty('--chat-radius',state.radius+'px');app.style.setProperty('--chat-avatar',state.avatarSize+'px');app.style.setProperty('--chat-blur',state.blur+'px'); }
   renderDesign();
-  window.addEventListener('pagehide',()=>{clearInterval(recordTimer);clearInterval(voiceTimer);clearTimeout(toastTimer);},{once:true});
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden) {
+      if(recordSession) { closeComposer(); toast('Запись отменена при сворачивании приложения.'); }
+      stopVoice();
+    }
+  });
+  window.addEventListener('pagehide',()=>{closeComposer();stopVoice();clearTimeout(toastTimer);});
+  Object.values(chats).forEach(({nodes})=>nodes.forEach(node=>{
+    node.querySelectorAll?.('.chat-voice audio').forEach(audio=>configureVoiceAudio(audio.closest('.chat-voice'),audio));
+  }));
   icons();
   showLogin();
   requestAnimationFrame(scrollToLatest);
