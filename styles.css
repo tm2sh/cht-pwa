@@ -49,6 +49,21 @@ button:focus, button:focus-visible { outline: none; }
 :root[data-input-modality="keyboard"] button:focus-visible { outline: 2px solid var(--chat-accent); outline-offset: 2px; }
 [hidden] { display: none !important; }
 
+.chat-ios-status-surface { display: none; }
+/* Experimental iOS 27 workaround: an empty, text-clipped fixed background is
+   detected as a top surface by WebKit without painting a strip over the UI. */
+:root[data-ios-pwa="true"] .chat-ios-status-surface {
+  display: block;
+  position: fixed;
+  inset: 0 0 auto;
+  height: 12px;
+  z-index: 2147483647;
+  pointer-events: none;
+  background-color: var(--chat-wallpaper-color);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
 #chat-ui {
   position: relative;
   width: 100%;

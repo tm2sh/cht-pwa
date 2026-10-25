@@ -1,10 +1,10 @@
 /* Increase this version when changing the files cached at installation. */
 const CACHE_PREFIX = 'cht-pwa-layout:' + self.registration.scope + ':';
-const CACHE_NAME = CACHE_PREFIX + 'v28';
+const CACHE_NAME = CACHE_PREFIX + 'v29';
 const APP_FILES = [
   './',
   './index.html',
-  './styles.css?v=22',
+  './styles.css?v=23',
   './app.js?v=25',
   './media/lake-boat.jpg',
   './media/lake-shore.jpg',

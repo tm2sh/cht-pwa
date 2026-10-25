@@ -16,14 +16,18 @@
   <link rel="icon" type="image/svg+xml" href="./icons/icon.svg">
   <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
   <script>
-    // iOS can expose navigator.standalone before its display-mode media query.
-    if (navigator.standalone) document.documentElement.dataset.displayMode = 'standalone';
+    // Set iOS standalone flags before the first paint, including the status-bar workaround.
+    if (navigator.standalone === true) {
+      document.documentElement.dataset.displayMode = 'standalone';
+      document.documentElement.dataset.iosPwa = 'true';
+    }
   </script>
-  <link rel="stylesheet" href="./styles.css?v=22">
+  <link rel="stylesheet" href="./styles.css?v=23">
   <script src="./vendor/lucide.min.js" defer></script>
   <script src="./app.js?v=25" defer></script>
 </head>
 <body>
+<div class="chat-ios-status-surface" aria-hidden="true"></div>
 <main id="chat-ui">
   <div class="chat-stage">
     <article class="chat-app" aria-label="Вход · Liquid Glass">
