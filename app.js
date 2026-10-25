@@ -119,7 +119,10 @@
     }
     const editing = document.activeElement?.matches('input, textarea, [contenteditable="true"]');
     if(!editing) stableViewportHeight = Math.max(stableViewportHeight, window.innerHeight);
-    const keyboardOpen = editing && Math.max(stableViewportHeight, window.innerHeight) - height > 120;
+    // iOS can briefly focus the document between two fields while the keyboard
+    // stays visible. Keep the reduced viewport until its height recovers.
+    const keyboardWasOpen = documentRoot.dataset.keyboard === 'open';
+    const keyboardOpen = (editing || keyboardWasOpen) && Math.max(stableViewportHeight, window.innerHeight) - height > 120;
     documentRoot.dataset.keyboard = keyboardOpen ? 'open' : 'closed';
     // Standalone CSS uses the large viewport, browser CSS the dynamic viewport.
     // VisualViewport is only used to shrink the chat during text entry.

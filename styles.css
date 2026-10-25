@@ -273,8 +273,12 @@ mark { color: inherit; background: var(--chat-hit); border-radius: 3px; padding:
 .chat-member-self { color: var(--chat-muted); font-size: 11px; font-weight: 400; }
 .chat-member-status { display: block; margin-top: 2px; color: var(--chat-muted); font-size: 12px; }
 .chat-member-status.is-online { color: light-dark(#16866c, #7dd8ba); }
-.chat-auth { z-index: 9; display: flex; flex-direction: column; padding-top: calc(var(--safe-top) + 24px); }
+.chat-auth { z-index: 9; display: flex; flex-direction: column; padding-top: calc(var(--safe-top) + 24px); overflow-anchor: none; }
 .chat-auth-content { flex: none; width: min(100%, 380px); margin: auto; padding: 24px 0; }
+/* The username and password keyboards can have different toolbar heights.
+   Keep both fields in place and visible instead of recentering the form. */
+:root[data-keyboard="open"] .chat-auth-content { margin-block: 0 auto; }
+:root[data-keyboard="open"] .chat-auth-symbol { display: none; }
 .chat-auth-heading { margin-bottom: 32px; text-align: center; }
 .chat-auth-symbol { display: grid; place-items: center; width: 88px; height: 88px; margin: 0 auto 22px; border: 1px solid var(--chat-glass-edge); border-radius: 28px; color: #f0f5fc; background: linear-gradient(145deg, #90baffb8, #5d8cd5b0 60%, #a48ed2a6); box-shadow: var(--chat-glass-shadow); -webkit-backdrop-filter: blur(var(--chat-blur)); backdrop-filter: blur(var(--chat-blur)); }
 .chat-auth-symbol svg { width: 42px; height: 42px; stroke-width: 1.5; }
