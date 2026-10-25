@@ -110,7 +110,8 @@
     if(viewport && Math.abs(viewport.scale - 1) > .01) return;
     // Only the message history should scroll. A normal-flow root avoids iOS
     // clipping, but text focus can still pan the document during keyboard entry.
-    if(documentRoot.dataset.displayMode === 'standalone' && (window.scrollX || window.scrollY)) window.scrollTo(0, 0);
+    const signingIn = !authScreen.hidden;
+    if(!signingIn && documentRoot.dataset.displayMode === 'standalone' && (window.scrollX || window.scrollY)) window.scrollTo(0, 0);
     const width = viewport?.width || window.innerWidth;
     const height = viewport?.height || window.innerHeight;
     if(Math.abs(width - stableViewportWidth) > 40) {
@@ -128,10 +129,18 @@
     // VisualViewport is only used to shrink the chat during text entry.
     if(keyboardOpen) {
       documentRoot.style.setProperty('--keyboard-height', height + 'px');
-      documentRoot.style.setProperty('--keyboard-top', Math.max(0, viewport?.offsetTop || 0) + 'px');
+      // The sign-in page prevents focus scrolling before it happens. Applying
+      // its old offset after iOS pans back would move the form a second time.
+      documentRoot.style.setProperty('--keyboard-top', (signingIn ? 0 : Math.max(0, viewport?.offsetTop || 0)) + 'px');
     } else {
       documentRoot.style.removeProperty('--keyboard-height');
       documentRoot.style.removeProperty('--keyboard-top');
+    }
+    if(!keyboardOpen && !editing && documentRoot.dataset.authEditing === 'true') {
+      // Restore any native document pan before returning to the centered
+      // sign-in layout after keyboard dismissal.
+      if(window.scrollX || window.scrollY) window.scrollTo(0, 0);
+      delete documentRoot.dataset.authEditing;
     }
     keepLatestVisible();
   }
@@ -250,6 +259,46 @@
     authScreen.scrollTop = 0;
     setScreen(authScreen, 'Вход');
   }
+  // Choose the compact layout before iOS calculates where to reveal a field.
+  // A native tap otherwise recenters even fully visible username/password inputs.
+  function prepareAuthFocus() {
+    if(documentRoot.dataset.iosPwa === 'true') documentRoot.dataset.authEditing = 'true';
+  }
+  let managingAuthFocus = false;
+  function focusAuthField(field) {
+    prepareAuthFocus();
+    managingAuthFocus = true;
+    try { field.focus({preventScroll:true}); }
+    finally { managingAuthFocus = false; }
+  }
+  authForm.addEventListener('focusin', event => {
+    prepareAuthFocus();
+    const previous = event.relatedTarget;
+    const field = event.target;
+    if(documentRoot.dataset.iosPwa !== 'true' || managingAuthFocus ||
+       documentRoot.dataset.keyboard !== 'open' ||
+       (field !== authLogin && field !== authPassword) ||
+       (previous !== authLogin && previous !== authPassword)) return;
+    // UIKit's field arrows bypass pointer handlers. Re-enter their transition
+    // synchronously with preventScroll, keeping the same keyboard session.
+    managingAuthFocus = true;
+    try {
+      previous.focus({preventScroll:true});
+      field.focus({preventScroll:true});
+    } finally { managingAuthFocus = false; }
+  });
+  authForm.addEventListener('pointerdown', event => {
+    if(documentRoot.dataset.iosPwa !== 'true' || !event.isPrimary || event.button !== 0) return;
+    const field = event.target.closest('.chat-settings-field')?.querySelector('input');
+    if(!field || event.target.closest('button') || document.activeElement === field) return;
+    event.preventDefault();
+    focusAuthField(field);
+  });
+  authLogin.addEventListener('keydown', event => {
+    if(event.key !== 'Enter' || event.isComposing) return;
+    event.preventDefault();
+    focusAuthField(authPassword);
+  });
   authForm.addEventListener('input', clearLoginError);
   authForm.addEventListener('submit', event => {
     event.preventDefault();
@@ -261,7 +310,7 @@
       authError.hidden = false;
       if(missingLogin) authLogin.setAttribute('aria-invalid', 'true');
       if(missingPassword) authPassword.setAttribute('aria-invalid', 'true');
-      (missingLogin ? authLogin : authPassword).focus({preventScroll:true});
+      focusAuthField(missingLogin ? authLogin : authPassword);
       return;
     }
     if(authLogin.value !== demoCredentials.login || authPassword.value !== demoCredentials.password) {

@@ -292,8 +292,14 @@ mark { color: inherit; background: var(--chat-hit); border-radius: 3px; padding:
 .chat-auth-content { flex: none; width: min(100%, 380px); margin: auto; padding: 24px 0; }
 /* The username and password keyboards can have different toolbar heights.
    Keep both fields in place and visible instead of recentering the form. */
-:root[data-keyboard="open"] .chat-auth-content { margin-block: 0 auto; }
-:root[data-keyboard="open"] .chat-auth-symbol { display: none; }
+/* overflow:hidden still permits focus-driven document scrolling. Clip only
+   while editing sign-in on iOS; the auth panel keeps its own overflow for short screens. */
+:root[data-ios-pwa="true"][data-auth-editing="true"],
+:root[data-ios-pwa="true"][data-auth-editing="true"] body { overflow: clip; }
+:root[data-keyboard="open"] .chat-auth-content,
+:root[data-auth-editing="true"] .chat-auth-content { margin-block: 0 auto; }
+:root[data-keyboard="open"] .chat-auth-symbol,
+:root[data-auth-editing="true"] .chat-auth-symbol { display: none; }
 .chat-auth-heading { margin-bottom: 32px; text-align: center; }
 .chat-auth-symbol { display: grid; place-items: center; width: 88px; height: 88px; margin: 0 auto 22px; border: 1px solid var(--chat-glass-edge); border-radius: 28px; color: #f0f5fc; background: linear-gradient(145deg, #90baffb8, #5d8cd5b0 60%, #a48ed2a6); box-shadow: var(--chat-glass-shadow); -webkit-backdrop-filter: blur(var(--chat-blur)); backdrop-filter: blur(var(--chat-blur)); }
 .chat-auth-symbol svg { width: 42px; height: 42px; stroke-width: 1.5; }
